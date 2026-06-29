@@ -71,9 +71,10 @@
    CONTENT AREA
    ============================================ */
 
-/* Wider content area — use 90% of screen */
+/* Wider content area — use ~98% of screen */
 .md-grid {
-  max-width: 95rem;
+  max-width: 100%;
+  padding: 0 1%;
 }
 
 .md-content {
