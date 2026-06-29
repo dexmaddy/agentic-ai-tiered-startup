@@ -1,0 +1,87 @@
+# Tiered Startup Configuration
+# Copy this to your project as startup-config.yaml and customize.
+
+# --- Tier Definitions ---
+# Tier 1: Always loaded at session start (keep total under ~1500 lines)
+# Tier 2: Loaded on-demand when trigger keywords appear in tool calls
+tiers:
+  tier1:
+    - name: core-rules
+      source: rules/core-rules.md          # static file — copied as-is
+      description: "Core behavioral rules"
+
+    - name: project-context
+      source: scripts/gen_context.sh        # dynamic — script stdout becomes the file
+      type: generated
+      description: "Project state and active work"
+
+    - name: infra-report
+      type: checks                          # special — built from check results below
+      description: "Infrastructure health report"
+
+  tier2:
+    - name: api-reference
+      triggers: ["api", "endpoint", "REST", "swagger"]
+      source: rules/api-rules.md
+      description: "API design and integration rules"
+
+    - name: testing-guide
+      triggers: ["test", "pytest", "jest", "spec"]
+      source: rules/testing-rules.md
+      description: "Testing standards and patterns"
+
+    - name: deployment
+      triggers: ["deploy", "CI", "pipeline", "release"]
+      source: rules/deployment-rules.md
+      description: "Deployment and CI/CD procedures"
+
+# --- Infrastructure Checks ---
+# Run during SessionStart. Results go into the infra-report tier1 file.
+# Each check has a command and a validator (how to interpret stdout).
+checks:
+  - name: git-clean
+    command: "git status --porcelain"
+    validator: empty_output                 # pass if stdout is empty
+    fail_message: "Uncommitted changes detected"
+
+  - name: db-health
+    command: "sqlite3 project.db 'PRAGMA integrity_check'"
+    validator: "contains:ok"                # pass if stdout contains "ok"
+    fail_message: "Database integrity check failed"
+
+  - name: tests-pass
+    command: "npm test --silent 2>&1 | tail -1"
+    validator: "contains:passing"
+    fail_message: "Tests are failing"
+    optional: true                          # won't block startup
+
+  - name: no-stale-branches
+    command: "git branch --merged main | grep -v main | wc -l | tr -d ' '"
+    validator: "equals:0"
+    fail_message: "Merged branches need cleanup"
+    optional: true
+
+# --- Gate Configuration ---
+gates:
+  block_until_tier1: true                   # PreToolUse blocks non-Read tools until tier1 read
+  tier2_keyword_scan: true                  # scan tool inputs for tier2 trigger keywords
+  keyword_scan_fields:                      # which JSON fields to scan (limit to avoid false positives)
+    - command                               # Bash command text
+    - file_path                             # Read/Write file path
+    - prompt                                # Agent prompt
+    - description                           # Agent description
+  keyword_scan_max_chars: 120               # only scan first N chars of each field
+  prompt_health_warnings: [40, 60, 80]      # warn at these prompt counts
+
+# --- Stop Hook ---
+stop:
+  require_clean_repos: true                 # block exit until git repos are clean
+  require_transcript: false                 # block exit until transcript saved
+  max_retries: 8                            # how many times to retry before force-exit
+
+# --- Paths ---
+paths:
+  manifest: "${TMPDIR}/manifest-${SESSION_ID}.json"
+  sentinel: "${TMPDIR}/startup-complete-${SESSION_ID}.json"
+  tier1_prefix: "${TMPDIR}/tier1-"
+  tier2_prefix: "${TMPDIR}/tier2-"

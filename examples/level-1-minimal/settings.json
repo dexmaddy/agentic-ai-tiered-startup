@@ -1,0 +1,17 @@
+{
+  "_comment": "Level 1: Manifest + Tier 1 only. No gates, no blocking.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/on_session_start.py",
+            "timeout": 60000
+          }
+        ]
+      }
+    ]
+  }
+}
