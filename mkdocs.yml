@@ -95,6 +95,10 @@ nav:
     - Rules & Frameworks:
       - Anti-Hallucination Rules: rules/anti-hallucination-rules.md
       - Rule Evolution: reference/rule-evolution-template.md
+      - Rule Zero: reference/rule-zero.md
+    - Patterns:
+      - Self-Healing Loop: reference/self-healing-loop.md
+      - Self-Verification: reference/self-verification.md
     - Guides:
       - Session Continuity: reference/session-continuity.md
   - Slides: slides.md

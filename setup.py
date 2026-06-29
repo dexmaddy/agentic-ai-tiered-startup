@@ -459,6 +459,16 @@ Read the manifest from hook output, then read ALL tier1 files before doing
 any work. Gates enforce this — tools are blocked until all files are read.
 
 Do NOT skip startup. Do NOT explain what startup does — just do it.
+
+## Rule Zero
+
+After every file edit, ask: "Is this scattered information that belongs
+in a consolidated file?" If yes, route it immediately — don't wait.
+
+## Self-Verification
+
+After completing ANY task, re-run at least one verification command that
+proves the work is done. Do NOT narrate — VERIFY.
 """
     if path.exists():
         content = path.read_text()

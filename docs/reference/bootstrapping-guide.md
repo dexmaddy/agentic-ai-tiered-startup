@@ -156,11 +156,22 @@ After your initial 5 rules, the system grows organically:
 - Over 50 rules → split by category (coding, deploy, data, testing)
 - Over 1500 total tier1 lines → move lower-frequency rules to tier2
 
+**Keep index files thin:**
+If you use an index file (like a README that lists your rules), keep it
+as pointers only — just titles and links, not full content. This keeps
+the auto-loaded context budget small. Put the actual content in the
+individual rule files. A 200-line index with links to 50 rule files
+loads in ~300 tokens; 50 rules inline would cost ~6000 tokens.
+
 **When to add checks:**
 - A rule is about verifiable state → add an infra check
   - "DB must have table X" → `sqlite3 db.db ".tables" | grep X`
   - "Config must have key Y" → `grep Y config.yaml`
   - "No TODO comments in main" → `git diff main | grep TODO | wc -l`
+
+**Apply [Rule Zero](rule-zero.md):**
+After every edit, ask "Is this scattered information that belongs in a
+consolidated file?" Route it immediately — don't wait for a cleanup session.
 
 ---
 

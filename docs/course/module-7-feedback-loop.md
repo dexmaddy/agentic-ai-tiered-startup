@@ -201,12 +201,33 @@ from imagining what might happen.
 
 ---
 
+## Advanced Patterns
+
+These three patterns make the feedback loop self-sustaining. Read them
+after completing the basics above:
+
+1. **[Rule Zero](../reference/rule-zero.md)** — every file edit triggers
+   "is this scattered information?" and routes it to the right file.
+   This is how the system grows without periodic cleanup sessions.
+
+2. **[Self-Healing Loop](../reference/self-healing-loop.md)** — the
+   bidirectional flow where rules feed audit checks AND audit checks
+   feed rules. Makes the system self-maintaining.
+
+3. **[Self-Verification](../reference/self-verification.md)** — the
+   4-point check that proves work is actually done, not just narrated
+   as done. Apply after every task.
+
+---
+
 ## Checkpoint
 
 - [ ] You've written at least one rule from a real failure
 - [ ] You've added at least one infrastructure check
 - [ ] You understand when to escalate a rule to a hook gate
 - [ ] You know when to retire a rule
+- [ ] You've read Rule Zero and understand the routing pattern
+- [ ] You've read the Self-Verification 4-point check
 
 ---
 

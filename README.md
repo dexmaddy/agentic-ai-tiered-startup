@@ -442,10 +442,13 @@ agentic-ai-tiered-startup/
 │   ├── course/                           # 8-module mini course
 │   │   ├── README.md                     # Course overview
 │   │   └── module-1 through module-8     # Course modules
-│   ├── reference/                        # Guides and templates
+│   ├── reference/                        # Guides, templates, patterns
 │   │   ├── setup-wizard.md               # Wizard docs
 │   │   ├── bootstrapping-guide.md        # First 5 rules
 │   │   ├── rule-evolution-template.md    # Failure → rule → hook
+│   │   ├── rule-zero.md                  # Every edit triggers categorization
+│   │   ├── self-healing-loop.md          # Bidirectional rule-audit feedback
+│   │   ├── self-verification.md          # 4-point completion check
 │   │   └── session-continuity.md         # Persistent backlog
 │   └── rules/                            # Reusable rule frameworks
 │       └── anti-hallucination-rules.md   # 14 research-backed rules

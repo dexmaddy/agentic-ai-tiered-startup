@@ -35,6 +35,22 @@ of sessions:
 
 8. **More reasoning = worse faithfulness.** Giving the LLM more thinking
    time makes summaries *less* faithful to sources (r = -0.685). Use
-   reasoning for verification, never for generation. See `docs/rules/anti-hallucination-rules.md`.
+   reasoning for verification, never for generation. See the
+   [Anti-Hallucination Rules](../rules/anti-hallucination-rules.md).
+
+9. **Route, don't scatter.** Every file edit should trigger "is this
+   scattered information?" and route it to the right consolidated file.
+   Without this ([Rule Zero](../reference/rule-zero.md)), information
+   accumulates in conversations and is lost at session end.
+
+10. **Verify, don't narrate.** "I updated the file" is not verification.
+    Re-run the command that proves it worked. The
+    [4-point self-check](../reference/self-verification.md) catches what
+    task completion misses.
+
+11. **Make the loop bidirectional.** Rules should feed audit checks AND
+    audit checks should feed rules. A one-directional system decays. The
+    [Self-Healing Loop](../reference/self-healing-loop.md) keeps both
+    sides growing from each other.
 
 ---
