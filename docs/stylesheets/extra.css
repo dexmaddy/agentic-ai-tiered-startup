@@ -86,6 +86,30 @@
 }
 
 /* ============================================
+   CONTENT LINKS — visible without hover
+   ============================================ */
+
+.md-typeset a {
+  color: var(--md-accent-fg-color);
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 229, 255, 0.4);
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.md-typeset a:hover {
+  text-decoration-color: var(--md-accent-fg-color);
+}
+
+/* Don't underline nav, header, or footer links */
+.md-nav a,
+.md-header a,
+.md-footer a,
+.md-tabs a {
+  text-decoration: none;
+}
+
+/* ============================================
    CONTENT AREA
    ============================================ */
 
