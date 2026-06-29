@@ -29,7 +29,7 @@ your tiered startup system.
     ---
 
     Every file edit triggers: "Is this scattered information that belongs
-    in a consolidated file?" Keeps the system organized as it grows.
+    in a consolidated file?" Structurally enforced by `on_edit.py` hook.
 
 </div>
 
@@ -41,16 +41,17 @@ your tiered startup system.
 
     ---
 
-    Bidirectional feedback between rules and audit checks. Rules feed
-    the audit with new checks; audit feeds rules with scattered items.
-    Neither is a dead end.
+    Bidirectional feedback between rules and audit checks. Structurally
+    enforced: `cross_check.py` generates write-back suggestions for
+    persistent drift. Neither side is a dead end.
 
 -   :material-check-decagram:{ .lg .middle } **[Self-Verification](self-verification.md)**
 
     ---
 
     After completing any task, re-run at least one verification command.
-    "I did it" is not the same as "it's done." The 4-point completion check.
+    Structurally enforced: `on_stop.py` blocks exit if infra files were
+    edited after the last check. "I did it" is not "it's done."
 
 -   :material-swap-horizontal:{ .lg .middle } **[Session Continuity](session-continuity.md)**
 

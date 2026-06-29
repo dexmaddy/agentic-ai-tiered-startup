@@ -219,14 +219,16 @@ Run through each item and confirm:
 - [ ] Anti-hallucination rules are in tier1 or tier2
 - [ ] At least one rule was born from a real failure
 
-### Self-Verification ([4-point check](../reference/self-verification.md))
+### Self-Verification ([enforced via on_stop hook](../reference/self-verification.md))
 - [ ] Re-run startup — does the output match your expectations?
 - [ ] All files committed and pushed?
 - [ ] No stale references (grep for old paths/counts)?
 - [ ] A second run produces the same result?
+- [ ] Stop hook blocks exit if infra files edited after last check
 
-### Rule Zero ([routing pattern](../reference/rule-zero.md))
+### Rule Zero ([enforced via on_edit hook](../reference/rule-zero.md))
 - [ ] Agent instructions include the Rule Zero prompt
+- [ ] on_edit hook scans for scattered content across consolidated files
 - [ ] At least one rule triggered a corresponding audit check
 
 ---
