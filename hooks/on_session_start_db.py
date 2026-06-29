@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""SessionStart hook (Database variant): read rules from SQLite, generate tier files.
+"""SessionStart hook (Database variant): read rules from SQLite or PostgreSQL.
 
 Method B of the Agentic AI Tiered Startup Architecture.
 Use this instead of on_session_start.py when your rules, backlog, and session
-state live in a SQLite database rather than YAML config files.
+state live in a database rather than YAML config files.
 
-Requires: SQLite database with these tables:
+Supports:
+  - SQLite: AGENT_DB_PATH=project.db (default, zero dependencies)
+  - PostgreSQL: AGENT_DB_PATH=postgresql://user:pass@host/db (requires psycopg2)
+
+The script auto-detects which backend to use based on the connection string.
+
+Requires these tables (created by --init-db):
   - rules (id, name, content, category, tier, triggers, active)
   - checks (id, name, command, validator, fail_message, optional)
   - backlog (id, item, status, priority, category, created_at, completed_at)
@@ -13,19 +19,16 @@ Requires: SQLite database with these tables:
   - config (key, value) — for gates, stop, cross_check settings
 
 Setup:
-  1. Run: python3 hooks/on_session_start_db.py --init-db project.db
-     This creates all tables with the schema above.
-  2. Populate rules: INSERT INTO rules (name, content, category, tier) VALUES (...)
-  3. Update settings.json to point to this script instead of on_session_start.py
+  SQLite:     python3 hooks/on_session_start_db.py --init-db project.db
+  PostgreSQL: python3 hooks/on_session_start_db.py --init-db postgresql://user:pass@host/db
 
 Environment:
-  AGENT_DB_PATH — path to SQLite database (default: project.db)
+  AGENT_DB_PATH — SQLite file path or PostgreSQL connection string (default: project.db)
   CLAUDE_SESSION_ID — session identifier (default: "default")
 """
 from __future__ import annotations
 import json
 import os
-import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -35,31 +38,77 @@ SESSION_ID = os.environ.get("CLAUDE_SESSION_ID", "default")
 TMPDIR = tempfile.gettempdir()
 DB_PATH = os.environ.get("AGENT_DB_PATH", "project.db")
 
+# DB-API 2.0 placeholder: ? for sqlite3, %s for psycopg2
+PH = "?"
 
-def get_db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+
+def _is_postgres(path: str) -> bool:
+    return path.startswith("postgresql://") or path.startswith("postgres://")
+
+
+def get_db():
+    """Connect to SQLite or PostgreSQL based on AGENT_DB_PATH."""
+    global PH
+    if _is_postgres(DB_PATH):
+        try:
+            import psycopg2
+            import psycopg2.extras
+        except ImportError:
+            print("ERROR: psycopg2 required for PostgreSQL. Install: pip install psycopg2-binary", file=sys.stderr)
+            sys.exit(1)
+        PH = "%s"
+        conn = psycopg2.connect(DB_PATH)
+        conn.cursor_factory = psycopg2.extras.RealDictCursor
+        return conn
+    else:
+        import sqlite3
+        PH = "?"
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+
+def _execute_schema(conn, schema_sql: str) -> None:
+    """Execute schema DDL — handles sqlite3.executescript vs psycopg2 execute."""
+    if _is_postgres(DB_PATH):
+        conn.cursor().execute(schema_sql)
+        conn.commit()
+    else:
+        conn.executescript(schema_sql)
 
 
 def init_db(db_path: str) -> None:
     """Create all tables for the tiered startup system."""
-    conn = sqlite3.connect(db_path)
-    conn.executescript("""
+    if _is_postgres(db_path):
+        try:
+            import psycopg2
+        except ImportError:
+            print("ERROR: psycopg2 required. Install: pip install psycopg2-binary", file=sys.stderr)
+            sys.exit(1)
+        conn = psycopg2.connect(db_path)
+    else:
+        import sqlite3
+        conn = sqlite3.connect(db_path)
+
+    serial_type = "SERIAL" if _is_postgres(db_path) else "INTEGER"
+    auto_increment = "" if _is_postgres(db_path) else "AUTOINCREMENT"
+    timestamp_default = "NOW()" if _is_postgres(db_path) else "CURRENT_TIMESTAMP"
+
+    schema = f"""
         CREATE TABLE IF NOT EXISTS rules (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {serial_type} PRIMARY KEY {auto_increment},
             name TEXT NOT NULL UNIQUE,
             content TEXT NOT NULL,
             category TEXT DEFAULT 'general',
-            tier INTEGER DEFAULT 1,              -- 1 = always load, 2 = on-demand
-            triggers TEXT,                        -- JSON array of trigger keywords (tier 2 only)
+            tier INTEGER DEFAULT 1,
+            triggers TEXT,
             active INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT {timestamp_default},
+            updated_at TIMESTAMP DEFAULT {timestamp_default}
         );
 
         CREATE TABLE IF NOT EXISTS checks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {serial_type} PRIMARY KEY {auto_increment},
             name TEXT NOT NULL,
             command TEXT NOT NULL,
             validator TEXT DEFAULT 'empty_output',
@@ -69,20 +118,20 @@ def init_db(db_path: str) -> None:
         );
 
         CREATE TABLE IF NOT EXISTS backlog (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {serial_type} PRIMARY KEY {auto_increment},
             item TEXT NOT NULL,
-            status TEXT DEFAULT 'active',          -- active, completed, deferred
-            priority INTEGER DEFAULT 3,            -- 1 (highest) to 5 (lowest)
+            status TEXT DEFAULT 'active',
+            priority INTEGER DEFAULT 3,
             category TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT {timestamp_default},
             completed_at TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS session_summaries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {serial_type} PRIMARY KEY {auto_increment},
             topic TEXT,
-            completed_items TEXT,                   -- JSON array
-            next_items TEXT,                        -- JSON array
+            completed_items TEXT,
+            next_items TEXT,
             session_date DATE DEFAULT CURRENT_DATE,
             duration_minutes INTEGER,
             prompt_count INTEGER
@@ -90,9 +139,10 @@ def init_db(db_path: str) -> None:
 
         CREATE TABLE IF NOT EXISTS config (
             key TEXT PRIMARY KEY,
-            value TEXT NOT NULL                     -- JSON-encoded value
+            value TEXT NOT NULL
         );
-    """)
+    """
+    _execute_schema(conn, schema)
     # Insert default config if empty
     defaults = {
         "gates.block_until_tier1": "true",
@@ -104,24 +154,37 @@ def init_db(db_path: str) -> None:
         "stop.require_transcript": "false",
         "stop.max_retries": "8",
     }
+    ph = "%s" if _is_postgres(db_path) else "?"
+    upsert = "ON CONFLICT (key) DO NOTHING" if _is_postgres(db_path) else "OR IGNORE"
+    cur = conn.cursor()
     for key, value in defaults.items():
-        conn.execute(
-            "INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)", (key, value)
+        cur.execute(
+            f"INSERT {upsert} INTO config (key, value) VALUES ({ph}, {ph})", (key, value)
         )
     conn.commit()
     conn.close()
+    is_pg = _is_postgres(db_path)
     print(f"Database initialized: {db_path}")
+    print(f"Backend: {'PostgreSQL' if is_pg else 'SQLite'}")
     print(f"Tables: rules, checks, backlog, session_summaries, config")
-    print(f"\nNext steps:")
-    print(f"  1. Add rules:  sqlite3 {db_path} \"INSERT INTO rules (name, content, category, tier) VALUES ('my-rule', 'Rule content here', 'general', 1)\"")
-    print(f"  2. Add checks: sqlite3 {db_path} \"INSERT INTO checks (name, command, validator) VALUES ('git-clean', 'git status --porcelain', 'empty_output')\"")
-    print(f"  3. Update settings.json to use: python3 .agent/hooks/on_session_start_db.py")
+    if is_pg:
+        print(f"\nNext steps:")
+        print(f"  1. Add rules:  psql {db_path} -c \"INSERT INTO rules (name, content, category, tier) VALUES ('my-rule', 'Rule content here', 'general', 1)\"")
+        print(f"  2. Add checks: psql {db_path} -c \"INSERT INTO checks (name, command, validator) VALUES ('git-clean', 'git status --porcelain', 'empty_output')\"")
+        print(f"  3. Set: export AGENT_DB_PATH={db_path}")
+    else:
+        print(f"\nNext steps:")
+        print(f"  1. Add rules:  sqlite3 {db_path} \"INSERT INTO rules (name, content, category, tier) VALUES ('my-rule', 'Rule content here', 'general', 1)\"")
+        print(f"  2. Add checks: sqlite3 {db_path} \"INSERT INTO checks (name, command, validator) VALUES ('git-clean', 'git status --porcelain', 'empty_output')\"")
+        print(f"  3. Update settings.json to use: python3 .agent/hooks/on_session_start_db.py")
 
 
-def get_config(conn: sqlite3.Connection) -> dict:
+def get_config(conn) -> dict:
     """Read config table into nested dict."""
     config: dict = {}
-    for row in conn.execute("SELECT key, value FROM config"):
+    cur = conn.cursor()
+    cur.execute("SELECT key, value FROM config")
+    for row in cur:
         keys = row["key"].split(".")
         d = config
         for k in keys[:-1]:
@@ -133,12 +196,14 @@ def get_config(conn: sqlite3.Connection) -> dict:
     return config
 
 
-def run_checks(conn: sqlite3.Connection) -> list[dict]:
+def run_checks(conn) -> list[dict]:
     """Run infrastructure checks from the checks table."""
     from validators import get_validator, validate_exit_code
 
     results = []
-    for row in conn.execute("SELECT * FROM checks WHERE active = 1"):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM checks WHERE active = 1")
+    for row in cur:
         name = row["name"]
         try:
             proc = subprocess.run(
@@ -159,7 +224,7 @@ def run_checks(conn: sqlite3.Connection) -> list[dict]:
     return results
 
 
-def generate_tier1_files(conn: sqlite3.Connection, check_results: list[dict]) -> list[dict]:
+def generate_tier1_files(conn, check_results: list[dict]) -> list[dict]:
     """Generate tier1 files from DB rules + infra report + backlog."""
     entries = []
 
@@ -177,7 +242,9 @@ def generate_tier1_files(conn: sqlite3.Connection, check_results: list[dict]) ->
 
     # Tier 1 rules grouped by category
     categories: dict[str, list] = {}
-    for row in conn.execute("SELECT * FROM rules WHERE tier = 1 AND active = 1 ORDER BY category, name"):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM rules WHERE tier = 1 AND active = 1 ORDER BY category, name")
+    for row in cur:
         categories.setdefault(row["category"], []).append(row)
 
     for category, rules in categories.items():
@@ -195,13 +262,17 @@ def generate_tier1_files(conn: sqlite3.Connection, check_results: list[dict]) ->
     # Backlog + session continuity
     backlog_path = os.path.join(TMPDIR, f"tier1-backlog-{SESSION_ID}.md")
     lines = ["# Active Backlog", ""]
-    for row in conn.execute("SELECT * FROM backlog WHERE status = 'active' ORDER BY priority"):
+    cur2 = conn.cursor()
+    cur2.execute("SELECT * FROM backlog WHERE status = 'active' ORDER BY priority")
+    for row in cur2:
         lines.append(f"- [{row['category'] or 'task'}] {row['item']} (priority {row['priority']})")
 
     lines.append("")
     lines.append("## Continue From Last Session")
     lines.append("")
-    last = conn.execute("SELECT * FROM session_summaries ORDER BY id DESC LIMIT 1").fetchone()
+    cur3 = conn.cursor()
+    cur3.execute("SELECT * FROM session_summaries ORDER BY id DESC LIMIT 1")
+    last = cur3.fetchone()
     if last:
         lines.append(f"Topic: {last['topic'] or 'unknown'}")
         if last["completed_items"]:
@@ -222,10 +293,12 @@ def generate_tier1_files(conn: sqlite3.Connection, check_results: list[dict]) ->
     return entries
 
 
-def get_tier2_defs(conn: sqlite3.Connection) -> list[dict]:
+def get_tier2_defs(conn) -> list[dict]:
     """Get tier2 rule definitions with triggers."""
     defs = []
-    for row in conn.execute("SELECT name, triggers, category FROM rules WHERE tier = 2 AND active = 1"):
+    cur = conn.cursor()
+    cur.execute("SELECT name, triggers, category FROM rules WHERE tier = 2 AND active = 1")
+    for row in cur:
         triggers = json.loads(row["triggers"]) if row["triggers"] else []
         defs.append({
             "name": row["name"],

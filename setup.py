@@ -166,7 +166,7 @@ STORES = {
         "name": "PostgreSQL database",
         "script": "on_session_start_db.py",
         "deps": ["psycopg2-binary"],
-        "description": "Experimental — same schema as SQLite, requires manual psycopg2 adapter. For teams with existing Postgres.",
+        "description": "Experimental — same hook script as SQLite with auto-detected psycopg2 backend. Not yet tested in production.",
     },
 }
 
