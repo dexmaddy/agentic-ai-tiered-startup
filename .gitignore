@@ -7,3 +7,4 @@ __pycache__/
 backlog.json
 Gemfile.lock
 startup-config.yaml
+site/
