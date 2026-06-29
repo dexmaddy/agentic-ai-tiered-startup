@@ -242,8 +242,28 @@ def test_prompt_submit() -> None:
     sentinel["stage"] = "complete"
     Path(os.path.join(tmpdir, f"startup-complete-{sid}.json")).write_text(json.dumps(sentinel))
 
-    # Remove old prompt count
+    # Remove old prompt count and fail-shown flag
     count_file = os.path.join(tmpdir, f"prompt-count-{sid}")
+    Path(count_file).unlink(missing_ok=True)
+    Path(os.path.join(tmpdir, f"infra-fail-shown-{sid}")).unlink(missing_ok=True)
+
+    # Test: infra FAIL gate — create an infra report with a FAIL
+    infra_path = os.path.join(tmpdir, "tier1-infra-smoke.md")
+    Path(infra_path).write_text("- [OK] Check venv\n- [FAIL] Check repos clean: 1 uncommitted\n")
+    manifest["tier1"][0]["name"] = "infra-report"
+    manifest["tier1"][0]["path"] = infra_path
+    Path(os.path.join(tmpdir, f"manifest-{sid}.json")).write_text(json.dumps(manifest))
+    code, stdout, _ = run_hook("on_prompt_submit.py", env_extra=env)
+    check("Infra FAIL gate fires", "ACTION REQUIRED" in stdout and "FAIL" in stdout)
+
+    # Test: FAIL gate only fires once (flag file prevents repeat)
+    Path(count_file).unlink(missing_ok=True)
+    code, stdout, _ = run_hook("on_prompt_submit.py", env_extra=env)
+    check("FAIL gate does not repeat", "ACTION REQUIRED" not in stdout)
+
+    # Reset for prompt count test
+    manifest["tier1"][0]["name"] = "rules"
+    Path(os.path.join(tmpdir, f"manifest-{sid}.json")).write_text(json.dumps(manifest))
     Path(count_file).unlink(missing_ok=True)
 
     # Test: prompt counting works (fire twice to reach threshold 2)
@@ -252,8 +272,10 @@ def test_prompt_submit() -> None:
     check("Health warning at threshold", "CONTEXT HEALTH" in stdout or code == 0)
 
     # Cleanup
-    for f in [f"manifest-{sid}.json", f"startup-complete-{sid}.json", f"prompt-count-{sid}"]:
+    for f in [f"manifest-{sid}.json", f"startup-complete-{sid}.json",
+              f"prompt-count-{sid}", f"infra-fail-shown-{sid}"]:
         Path(os.path.join(tmpdir, f)).unlink(missing_ok=True)
+    Path(infra_path).unlink(missing_ok=True)
 
 
 def test_stop_hook() -> None:

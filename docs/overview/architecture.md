@@ -8,7 +8,9 @@ graph TD
     A[SessionStart] -->|generates| B[manifest.json + sentinel.json]
     B --> C{UserPromptSubmit}
     C -->|tier1 incomplete| D[Inject 'read files first']
-    C -->|tier1 complete| E[Track prompt count + warn at thresholds]
+    C -->|tier1 complete| E0{Infra FAILs?}
+    E0 -->|YES first prompt| E1["Inject 'ACTION REQUIRED: fix FAILs'"]
+    E0 -->|NO| E[Track prompt count + warn at thresholds]
 
     F{PreToolUse} -->|tool = Read| G[Track file read + allow]
     F -->|tier1 incomplete| H[BLOCK tool]
@@ -20,6 +22,7 @@ graph TD
     L -->|all clean| N[Exit 0 = allow]
 
     style A fill:#4a90d9,color:#fff
+    style E1 fill:#d9534f,color:#fff
     style H fill:#d9534f,color:#fff
     style J fill:#f0ad4e,color:#fff
     style K fill:#5cb85c,color:#fff

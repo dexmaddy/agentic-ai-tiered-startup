@@ -153,6 +153,10 @@ Check with: `python3 -c "import yaml; print('ok')"`
 The check command failed its validator. Check the detail message.
 For `git-clean` failures, commit your outstanding changes first.
 
+**Note:** In Module 4, the Prompt Gate adds structural enforcement for FAILs —
+the agent sees an "ACTION REQUIRED" message on its first prompt and must
+fix the failures before proceeding. At Level 1, FAILs are informational only.
+
 ### Hook doesn't run
 - Verify `.agent/settings.json` is valid JSON (use `python3 -m json.tool`)
 - Check that the command path is correct: `python3 .agent/hooks/on_session_start.py`

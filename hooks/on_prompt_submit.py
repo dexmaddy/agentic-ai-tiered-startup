@@ -21,6 +21,9 @@ MANIFEST = os.path.join(TMPDIR, f"manifest-{SESSION_ID}.json")
 PROMPT_COUNT_FILE = os.path.join(TMPDIR, f"prompt-count-{SESSION_ID}")
 
 
+INFRA_FAIL_SHOWN = os.path.join(TMPDIR, f"infra-fail-shown-{SESSION_ID}")
+
+
 def read_json(path: str) -> dict | None:
     try:
         return json.loads(Path(path).read_text())
@@ -39,6 +42,21 @@ def increment_prompt_count() -> int:
     count = get_prompt_count() + 1
     Path(PROMPT_COUNT_FILE).write_text(str(count))
     return count
+
+
+def check_infra_fails(manifest: dict) -> list[str]:
+    """Parse the infra report for [FAIL] lines."""
+    for entry in manifest.get("tier1", []):
+        if entry.get("name") == "infra-report" or entry.get("type") == "checks":
+            report_path = entry.get("path", "")
+            if report_path and os.path.exists(report_path):
+                fails = []
+                with open(report_path) as f:
+                    for line in f:
+                        if "[FAIL]" in line:
+                            fails.append(line.strip().lstrip("- "))
+                return fails
+    return []
 
 
 def main() -> None:
@@ -65,21 +83,40 @@ def main() -> None:
         print(json.dumps(output))
         sys.exit(0)
 
-    # Startup complete — track prompt count and warn at thresholds
+    # Startup complete — check for infra FAILs (first prompt only)
+    messages = []
+
+    if not os.path.exists(INFRA_FAIL_SHOWN):
+        fails = check_infra_fails(manifest)
+        if fails:
+            fail_list = "\n".join(f"  - {f}" for f in fails)
+            messages.append(
+                f"ACTION REQUIRED: {len(fails)} infrastructure FAIL(s) detected. "
+                "You MUST fix these BEFORE responding to the user:\n"
+                f"{fail_list}\n"
+                "Fix each one (commit, resolve, or explain why acceptable), "
+                "then confirm 0 FAIL before proceeding."
+            )
+        Path(INFRA_FAIL_SHOWN).write_text("1")
+
+    # Track prompt count and warn at thresholds
     count = increment_prompt_count()
     gates = manifest.get("gates", {})
     thresholds = gates.get("prompt_health_warnings", [40, 60, 80])
 
     for threshold in thresholds:
         if count == threshold:
-            warn_msg = (
+            messages.append(
                 f"CONTEXT HEALTH: {count} prompts this session. "
                 "Performance may be degrading. Consider saving state and starting fresh with /clear. "
                 "Use subagents (Agent tool) for heavy operations."
             )
-            output = {"hookSpecificOutput": {"additionalContext": warn_msg}}
-            print(json.dumps(output))
-            sys.exit(0)
+            break
+
+    if messages:
+        combined = "\n".join(messages)
+        output = {"hookSpecificOutput": {"additionalContext": combined}}
+        print(json.dumps(output))
 
     sys.exit(0)
 
