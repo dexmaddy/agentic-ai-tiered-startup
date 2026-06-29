@@ -5,16 +5,10 @@
 rules become checks, and checks become structural enforcement.
 
 ---
-
-## The Problem This Solves
-
-Most teams write rules once and never update them. Over time:
-- New failure modes appear that no rule covers
-- Old rules become irrelevant but stay in the file
-- The gap between "rules we have" and "rules we need" grows
-
-The feedback loop closes this gap by making rule creation a natural
-consequence of failure, not a separate maintenance task.
+!!! tip "Using SQLite instead of YAML?"
+    This module shows YAML examples. If you chose SQLite in the setup wizard,
+    see the [Data Store Mapping Guide](../reference/data-store-mapping.md) for
+    equivalent database commands.
 
 ---
 

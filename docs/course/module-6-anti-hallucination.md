@@ -5,25 +5,10 @@
 research-backed rules to prevent it.
 
 ---
-
-## Why This Matters
-
-If you use the agent to summarize documents, generate reports, or extract
-information from source data, hallucination is your biggest risk.
-
-**What hallucination looks like in practice:**
-- Summary says "v2.11.7" but source says "v2.11.6" (off by one digit)
-- Summary says "migration completed" but source only says "migration started"
-- Summary adds "which typically occurs when..." — true information that
-  isn't in the source (benign hallucination)
-
-**The numbers:**
-- the agent's benign hallucination rate: **21.31%** (FaithBench, NAACL 2025)
-- Reasoning models hallucinate **4.2x more** on grounded summarization (Vectara HHEM)
-- More thinking time = **worse faithfulness** (r = -0.685, Yuan & Zhang 2025)
-
-That last finding is counterintuitive: giving the model more time to
-"think" makes it more creative but less faithful to the source.
+!!! tip "Using SQLite instead of YAML?"
+    This module shows YAML examples. If you chose SQLite in the setup wizard,
+    see the [Data Store Mapping Guide](../reference/data-store-mapping.md) for
+    equivalent database commands.
 
 ---
 

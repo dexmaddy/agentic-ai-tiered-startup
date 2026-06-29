@@ -5,84 +5,10 @@
 PostToolUse actions, and the stop hook.
 
 ---
-
-## Part A: Tier 2 On-Demand Loading
-
-### The Concept
-
-Tier 2 files load only when the agent's tool calls contain matching keywords.
-This keeps specialized rules out of the context window until they're needed.
-
-### Step 1: Define Tier 2 Rules
-
-Add to `startup-config.yaml`:
-
-```yaml
-tiers:
-  tier2:
-    - name: deploy-rules
-      triggers: ["deploy", "release", "production", "staging"]
-      source: rules/deploy-rules.md
-      description: "Deployment procedures"
-
-    - name: api-rules
-      triggers: ["api", "endpoint", "REST", "swagger"]
-      source: rules/api-rules.md
-      description: "API design standards"
-```
-
-Create the corresponding rule files in `rules/`.
-
-### Step 2: Enable Keyword Scanning
-
-```yaml
-gates:
-  block_until_tier1: true
-  tier2_keyword_scan: true          # ← Enable
-  keyword_scan_fields:
-    - command
-    - file_path
-    - prompt
-    - description
-  keyword_scan_max_chars: 120
-```
-
-### Step 3: Test It
-
-Start a session, complete tier1 loading, then:
-
-```
-You: deploy the app to staging
-```
-
-the agent tries to run a Bash command containing "deploy" → gate scans
-the command text → finds "deploy" matches the deploy-rules trigger →
-blocks with:
-
-```
-Tier 2 files triggered — read before proceeding:
-  - deploy-rules: rules/deploy-rules.md
-```
-
-the agent reads the file, then the next tool call is allowed.
-
-### False Positive Prevention
-
-Keyword scanning is limited to prevent accidental triggers:
-
-1. **Only specific fields** — scans `command`, `file_path`, `prompt`,
-   `description`. Does NOT scan the full JSON (which might contain
-   unrelated data in arguments).
-
-2. **First N characters only** — default 120 chars. A long file being
-   written won't trigger just because the content mentions "deploy".
-
-3. **Already-loaded files skip** — once the agent reads a tier2 file,
-   that trigger won't fire again in the same session.
-
-**Tip:** If you get false positives, make triggers more specific:
-- Bad: `["test"]` (fires on "test", "testing", "latest")
-- Better: `["run tests", "test suite", "pytest", "jest"]`
+!!! tip "Using SQLite instead of YAML?"
+    This module shows YAML examples. If you chose SQLite in the setup wizard,
+    see the [Data Store Mapping Guide](../reference/data-store-mapping.md) for
+    equivalent database commands.
 
 ---
 

@@ -5,21 +5,10 @@
 using everything from Modules 1-7.
 
 ---
-
-## The Challenge
-
-Starting from your existing project, build a full Level 4 system with:
-- Tier 1 rules (always loaded)
-- Tier 2 rules (loaded on demand)
-- Infrastructure checks with validators
-- PreToolUse gate enforcement
-- UserPromptSubmit startup gate
-- PostToolUse save reminders
-- Stop hook for cleanup
-- Anti-hallucination rules
-- At least one rule born from a real failure
-
-At the end, run the smoke test to verify everything works.
+!!! tip "Using SQLite instead of YAML?"
+    This module shows YAML examples. If you chose SQLite in the setup wizard,
+    see the [Data Store Mapping Guide](../reference/data-store-mapping.md) for
+    equivalent database commands.
 
 ---
 

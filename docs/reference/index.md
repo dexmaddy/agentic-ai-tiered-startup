@@ -60,3 +60,16 @@ your tiered startup system.
     across sessions without losing context or forgetting tasks.
 
 </div>
+
+## Guides
+
+<div class="grid cards" markdown>
+
+-   :material-database-sync:{ .lg .middle } **[Data Store Mapping](data-store-mapping.md)**
+
+    ---
+
+    YAML-to-SQLite translation for every construct in the course: config,
+    rules, checks, tier2 triggers, backlog, and cross-check.
+
+</div>

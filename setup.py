@@ -166,7 +166,7 @@ STORES = {
         "name": "PostgreSQL database",
         "script": "on_session_start_db.py",
         "deps": ["psycopg2-binary"],
-        "description": "Full relational DB. Best for teams, CI/CD pipelines, or existing Postgres infrastructure.",
+        "description": "Experimental — same schema as SQLite, requires manual psycopg2 adapter. For teams with existing Postgres.",
     },
 }
 

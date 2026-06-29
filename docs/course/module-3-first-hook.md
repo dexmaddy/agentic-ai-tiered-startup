@@ -5,16 +5,10 @@
 a manifest and tier1 files from a YAML config.
 
 ---
-
-## What You'll Build
-
-By the end of this module, your AI agent sessions will:
-1. Run infrastructure checks at startup
-2. Generate tier1 rule files in a temp directory
-3. Print a manifest telling Claude exactly what to read
-4. Show a health report with PASS/FAIL for each check
-
-No gates yet — that's Module 4. This module gets the foundation working.
+!!! tip "Using SQLite instead of YAML?"
+    This module shows YAML examples. If you chose SQLite in the setup wizard,
+    see the [Data Store Mapping Guide](../reference/data-store-mapping.md) for
+    equivalent database commands.
 
 ---
 

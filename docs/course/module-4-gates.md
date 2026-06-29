@@ -5,15 +5,12 @@
 all tier1 files are read. Add prompt-level gate as a second layer.
 
 ---
+!!! tip "Using SQLite instead of YAML?"
+    This module shows YAML examples. If you chose SQLite in the setup wizard,
+    see the [Data Store Mapping Guide](../reference/data-store-mapping.md) for
+    equivalent database commands.
 
-## Why Gates Matter
-
-In Module 3, the agent *should* read the tier1 files but *can* skip them.
-There's no enforcement. This module adds two gates that make reading
-the files mandatory:
-
-| Gate | Hook | What It Does |
-|------|------|-------------|
+------|------|-------------|
 | Tool Gate | PreToolUse | Blocks Bash, Write, Edit, Agent — only allows Read |
 | Prompt Gate | UserPromptSubmit | Injects "read files first" into the agent's context |
 
