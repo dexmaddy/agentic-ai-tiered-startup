@@ -369,6 +369,19 @@ Or reference them directly in your LLM prompts when generating summaries.
 
 ---
 
+## Getting Started
+
+New to this? Start here:
+
+1. **[Bootstrapping Guide](docs/bootstrapping-guide.md)** — create your first 5 rules
+   in 15 minutes, with starter kits for web apps, data pipelines, and infrastructure
+2. **[Rule Evolution Template](docs/rule-evolution-template.md)** — the pattern for
+   turning failures into structural enforcement: failure → learning → rule → audit → hook
+3. **[Smoke Test](tests/smoke_test.py)** — verify your setup works end-to-end:
+   `python3 tests/smoke_test.py --verbose`
+
+---
+
 ## File Structure
 
 ```
@@ -386,6 +399,11 @@ claude-tiered-startup/
 │   └── validators.py                  # Output-based check validators
 ├── rules/
 │   └── anti-hallucination-rules.md    # 14 research-backed anti-hallucination rules
+├── docs/
+│   ├── bootstrapping-guide.md         # Create your first 5 rules in 15 min
+│   └── rule-evolution-template.md     # Failure → learning → rule → hook pattern
+├── tests/
+│   └── smoke_test.py                  # Verify full hook chain works (18 checks)
 ├── examples/
 │   ├── level-1-minimal/settings.json  # Just SessionStart
 │   ├── level-2-gated/settings.json    # + PreToolUse + UserPromptSubmit
