@@ -76,11 +76,8 @@ nav:
     - Implementation Levels: overview/levels.md
     - Data Store & Platforms: overview/data-and-platforms.md
     - Lessons Learned: overview/lessons-learned.md
-  - Getting Started:
-    - Setup Wizard: reference/setup-wizard.md
-    - Bootstrapping Guide: reference/bootstrapping-guide.md
   - Course:
-    - Course Overview: course/README.md
+    - course/index.md
     - Foundations:
       - "Module 1: The Problem": course/module-1-the-problem.md
       - "Module 2: Architecture": course/module-2-architecture.md
@@ -93,6 +90,7 @@ nav:
       - "Module 7: Feedback Loop": course/module-7-feedback-loop.md
     - "Module 8: Capstone": course/module-8-capstone.md
   - Reference:
+    - reference/index.md
     - Rules & Frameworks:
       - Anti-Hallucination Rules: rules/anti-hallucination-rules.md
       - Rule Evolution: reference/rule-evolution-template.md
@@ -101,5 +99,7 @@ nav:
       - Self-Healing Loop: reference/self-healing-loop.md
       - Self-Verification: reference/self-verification.md
     - Guides:
+      - Setup Wizard: reference/setup-wizard.md
+      - Bootstrapping Guide: reference/bootstrapping-guide.md
       - Session Continuity: reference/session-continuity.md
   - Slides: slides.md
