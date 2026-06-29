@@ -69,7 +69,13 @@ extra_css:
   - stylesheets/extra.css
 
 nav:
-  - Overview: index.md
+  - Overview:
+    - overview/index.md
+    - The Problem: overview/the-problem.md
+    - Architecture: overview/architecture.md
+    - Implementation Levels: overview/levels.md
+    - Data Store & Platforms: overview/data-and-platforms.md
+    - Lessons Learned: overview/lessons-learned.md
   - Getting Started:
     - Setup Wizard: reference/setup-wizard.md
     - Bootstrapping Guide: reference/bootstrapping-guide.md
