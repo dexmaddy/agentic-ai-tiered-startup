@@ -130,6 +130,11 @@ applied but verification was not re-run, the hook blocks exit (exit
 code 2 — retry) until the agent re-runs verification. This prevents
 the "I fixed it but didn't check if the fix worked" failure mode.
 
+**Note:** `git commit` and `git push` are auto-allowed by the gate even
+during the `tier1_pending` state. This means you can commit a fix
+discovered during startup without waiting for all tier1 files to load —
+version control is never blocked by the gate.
+
 ```yaml
 stop:
   require_clean_repos: true     # Self-check #2: is it committed?

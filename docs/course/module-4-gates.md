@@ -125,6 +125,11 @@ graph TD
 files that unlock everything else. The gate is a one-way door: once tier1
 is complete, it stays complete for the rest of the session.
 
+**Git commit passthrough:** `git commit` and `git push` commands are
+auto-allowed even during the `tier1_pending` state. Version control should
+never be blocked — the agent needs to be able to commit fixes discovered
+during startup without waiting for all tier1 files to load.
+
 ### The Prompt Gate Flow
 
 ```mermaid

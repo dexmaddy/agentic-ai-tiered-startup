@@ -181,6 +181,9 @@ PreToolUse and UserPromptSubmit hooks to your existing settings.
 4. All tier1 files read → sentinel updated to `stage: "complete"`
 5. the agent tries Bash again → gate checks sentinel → tier1 complete → **ALLOWED**
 
+**Git commit passthrough:** `git commit` and `git push` are auto-allowed
+even during `tier1_pending` state so version control is never blocked.
+
 The UserPromptSubmit hook adds a second layer: if the agent somehow ignores the
 PreToolUse denial, the prompt gate injects a message saying "read files first"
 that the agent sees before composing its response.
@@ -255,11 +258,20 @@ stop:
   require_clean_repos: true
   require_transcript: false
   max_retries: 8
+  shutdown_steps:              # configurable checks before exit
+    - name: lint-clean
+      command: "npm run lint 2>&1 | tail -1"
+      validator: "contains:no errors"
+      fail_message: "Linter has errors"
 ```
 
 The stop hook returns exit code 2 (retry) when checks fail. the agent sees the
 failure message and can fix the issue (e.g., commit uncommitted files). After
 max retries, it exits cleanly to avoid trapping the user.
+
+`shutdown_steps` are configurable — define any number of custom checks using
+the same validator registry as startup checks. Each failing step triggers a
+retry, giving the agent a chance to fix the issue before exit.
 
 ### Output-Based Validators
 
@@ -535,6 +547,16 @@ Claude Code's hooks API, but the patterns adapt to any platform with lifecycle e
 | **Dependencies** | PyYAML | None (sqlite3 is Python stdlib) |
 | **Best for** | Under ~50 rules, single user | 50+ rules, cross-referencing, concurrent sessions |
 | **Setup** | Copy config, write markdown files | `python3 hooks/on_session_start_db.py --init-db project.db` |
+
+### DB-Mode Features
+
+Method B (SQLite/PostgreSQL) enables additional features when `AGENT_DB_PATH` is set:
+
+- **Edit logging** — every Write/Edit is recorded in `rule_log` table (`on_edit.py`)
+- **Session summary enforcement** — `on_stop.py` requires a `session_summaries` row before exit
+- **Stale fact detection** — `gate_check.py` warns when `system_facts` or `fact_references` are stale
+
+These use three additional tables: `rule_log`, `system_facts`, `fact_references`.
 
 Start with Method A. Graduate to Method B when you hit the
 [pain signals](docs/session-continuity.md#why-sqlite-over-json) described

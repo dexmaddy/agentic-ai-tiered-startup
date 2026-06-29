@@ -69,6 +69,20 @@ Claude Code's hooks API, but the patterns adapt to any platform with lifecycle e
 | **Best for** | Under ~50 rules, single user | 50+ rules, cross-referencing, concurrent sessions |
 | **Setup** | Copy config, write markdown files | `python3 hooks/on_session_start_db.py --init-db project.db` |
 
+### DB-Mode Extra Tables
+
+When using Method B (SQLite), three additional tables enable advanced features
+that activate automatically when `AGENT_DB_PATH` is set:
+
+| Table | Feature | Hook |
+|-------|---------|------|
+| `rule_log` | Edit logging — every Write/Edit operation is recorded | `on_edit.py` |
+| `system_facts` | Stores project facts referenced by rules | `gate_check.py` |
+| `fact_references` | Maps rule-to-fact dependencies for staleness detection | `gate_check.py` |
+
+These power: edit audit trails, session summary enforcement at exit, and
+automatic warnings when facts referenced by rules become stale.
+
 Start with Method A. Graduate to Method B when you hit the
 [pain signals](../reference/session-continuity.md) described
 in the data source guide.

@@ -139,7 +139,16 @@ stop:
   require_transcript: false
   require_audit_pass: true    # run audit checks before exit
   max_retries: 8
+  shutdown_steps:              # custom checks before exit (same validators as startup)
+    - name: lint-clean
+      command: "npm run lint 2>&1 | tail -1"
+      validator: "contains:no errors"
+      fail_message: "Linter has errors"
 ```
+
+`shutdown_steps` uses the same validator registry as startup checks
+(`empty_output`, `contains:text`, `equals:text`, `regex:pattern`).
+Each step runs before exit; failures trigger retry (exit code 2).
 
 Wire in settings:
 
@@ -217,6 +226,7 @@ Every user message → UserPromptSubmit hook
        │
 Every tool call → PreToolUse hook
   → Blocks non-Read until tier1 complete
+  → Auto-allows git commit/push (version control never blocked)
   → Runs cross-check once
   → Triggers tier2 on keywords
        │

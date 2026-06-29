@@ -79,7 +79,13 @@ stop:
   require_transcript: false                 # block exit until transcript saved
   require_audit_pass: false                 # run audit checks before exit (Level 4)
   # audit_checks_path: checks/audit-checks.yaml  # custom path (default: auto-detected)
+  require_session_summary: false            # DB mode: require session summary before exit
   max_retries: 8                            # how many times to retry before force-exit
+  shutdown_steps:                           # custom checks before exit (same validators as startup)
+    # - name: lint-clean
+    #   command: "npm run lint 2>&1 | tail -1"
+    #   validator: "contains:no errors"
+    #   fail_message: "Linter has errors"
 
 # --- Cross-Check (Level 3) ---
 # Compare expected state against live commands after Tier 1 loads.
