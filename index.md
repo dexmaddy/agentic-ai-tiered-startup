@@ -33,26 +33,29 @@ This architecture solves all three with **tiered loading** (load what's needed),
 
 ## Architecture Overview
 
-Four AI coding agents hook points work together:
+Four hook points work together:
 
-```
-SessionStart                    PreToolUse
-    |                               |
-    v                               v
-[Read config]                 [Is tool = Read?]
-[Run checks]                    yes: track file read, allow
-[Generate tier1 files]          no:  is tier1 complete?
-[Write manifest.json]                yes: check tier2 triggers, allow
-[Write sentinel.json]                no:  BLOCK with reason
-    |                               |
-    v                               v
-UserPromptSubmit                Stop
-    |                               |
-    v                               v
-[Is tier1 complete?]          [Are repos clean?]
-  no:  inject "read first"    [Is transcript saved?]
-  yes: track prompt count       no:  exit 2 (retry)
-       warn at thresholds       yes: exit 0 (allow)
+```mermaid
+graph TD
+    A[SessionStart] -->|generates| B[manifest.json + sentinel.json]
+    B --> C{UserPromptSubmit}
+    C -->|tier1 incomplete| D[Inject 'read files first']
+    C -->|tier1 complete| E[Track prompt count + warn at thresholds]
+
+    F{PreToolUse} -->|tool = Read| G[Track file read + allow]
+    F -->|tier1 incomplete| H[BLOCK tool]
+    F -->|tier1 complete| I{Tier 2 keyword?}
+    I -->|yes| J[BLOCK: read tier2 file first]
+    I -->|no| K[ALLOW tool]
+
+    L{Stop} -->|repos dirty| M[Exit 2 = retry]
+    L -->|all clean| N[Exit 0 = allow]
+
+    style A fill:#4a90d9,color:#fff
+    style H fill:#d9534f,color:#fff
+    style J fill:#f0ad4e,color:#fff
+    style K fill:#5cb85c,color:#fff
+    style N fill:#5cb85c,color:#fff
 ```
 
 **Manifest** (`manifest.json`) — lists all tier1/tier2 files with paths, sizes,

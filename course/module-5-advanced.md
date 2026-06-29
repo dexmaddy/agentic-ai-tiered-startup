@@ -228,22 +228,21 @@ Wire in settings:
 
 ### How Retries Work
 
-```
-Session ending
-       │
-       v
-on_stop.py checks repos
-       │
-       ├── Clean? → exit 0 (allow exit)
-       └── Dirty? → exit 2 (retry)
-                     │
-                     v
-               the agent sees: "Repos not clean: 3 uncommitted files"
-               Claude runs: git add + git commit
-                     │
-                     v
-               on_stop.py runs again
-               Clean now? → exit 0 ✓
+```mermaid
+graph TD
+    A["Session ending"] --> B["on_stop.py checks repos"]
+    B --> C{Repos clean?}
+    C -->|YES| D["Exit 0 — allow exit"]
+    C -->|NO| E["Exit 2 — retry"]
+    E --> F["Agent sees: 'Repos not clean'"]
+    F --> G["Agent runs: git add + git commit"]
+    G --> B
+    B --> H{Max retries?}
+    H -->|reached| I["Force exit — don't trap user"]
+
+    style D fill:#5cb85c,color:#fff
+    style E fill:#d9534f,color:#fff
+    style I fill:#f0ad4e,color:#fff
 ```
 
 Max retries prevents the user from being trapped if the check can't

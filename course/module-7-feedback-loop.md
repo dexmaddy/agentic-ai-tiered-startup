@@ -27,16 +27,18 @@ consequence of failure, not a separate maintenance task.
 
 ## The Evolution Chain
 
-```
-FAILURE           → Something went wrong
-     ↓
-LEARNING          → Why it went wrong (root cause)
-     ↓
-RULE              → What to do differently
-     ↓
-AUDIT CHECK       → How to verify the rule is followed
-     ↓
-HOOK ENFORCEMENT  → Structural gate that prevents the failure
+```mermaid
+graph TD
+    A["FAILURE<br/>Something went wrong"] --> B["LEARNING<br/>Why it went wrong"]
+    B --> C["RULE<br/>What to do differently"]
+    C --> D["AUDIT CHECK<br/>How to verify the rule is followed"]
+    D --> E["HOOK ENFORCEMENT<br/>Structural gate that prevents it"]
+
+    style A fill:#d9534f,color:#fff
+    style B fill:#f0ad4e,color:#fff
+    style C fill:#4a90d9,color:#fff
+    style D fill:#5bc0de,color:#fff
+    style E fill:#5cb85c,color:#fff
 ```
 
 Not every failure needs all 5 steps. Most need at least a learning and
@@ -123,24 +125,23 @@ The feedback loop works in two directions:
 
 ### Forward: Failure → Rule → Check
 
-```
-Claude uses wrong API version
-     ↓
-Rule added: "API is v3, not v2"
-     ↓
-Check added: grep -r "api/v2" src/ | wc -l → must be 0
-     ↓
-Next session: check catches any v2 references at startup
+```mermaid
+graph LR
+    A["Agent uses wrong<br/>API version"] --> B["Rule added:<br/>'API is v3, not v2'"]
+    B --> C["Check added:<br/>grep api/v2 = 0"]
+    C --> D["Next session:<br/>catches v2 refs"]
+    style A fill:#d9534f,color:#fff
+    style D fill:#5cb85c,color:#fff
 ```
 
 ### Backward: Check → Discovery → Rule
 
-```
-Check finds: "3 files still reference old DB path"
-     ↓
-Discovery: migration guide was updated but 3 utility scripts weren't
-     ↓
-Rule added: "After any path change, grep the full codebase for old path"
+```mermaid
+graph LR
+    A["Check finds:<br/>'3 files reference<br/>old DB path'"] --> B["Discovery:<br/>migration missed<br/>3 utility scripts"]
+    B --> C["Rule added:<br/>'After path change,<br/>grep full codebase'"]
+    style A fill:#5bc0de,color:#fff
+    style C fill:#4a90d9,color:#fff
 ```
 
 The checks don't just verify — they find new issues that become new rules.

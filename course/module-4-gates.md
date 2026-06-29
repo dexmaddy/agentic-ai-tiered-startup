@@ -114,20 +114,21 @@ Start a new session. Before the agent reads any tier1 files:
 
 ### The Tool Gate Flow
 
-```
-the agent tries: Bash("npm test")
-       │
-       v
-gate_check.py reads sentinel
-       │
-       ├── Is tool = Read?
-       │     YES → track file read in sentinel, ALLOW
-       │
-       ├── Is tier1 complete?
-       │     NO  → DENY with list of missing files
-       │     YES → continue to tier2 check (Module 5)
-       │
-       └── All clear → ALLOW
+```mermaid
+graph TD
+    A["Agent tries: Bash('npm test')"] --> B["gate_check.py reads sentinel"]
+    B --> C{Is tool = Read?}
+    C -->|YES| D["Track file read, ALLOW"]
+    C -->|NO| E{Is tier1 complete?}
+    E -->|NO| F["DENY with missing file list"]
+    E -->|YES| G{Tier2 keyword?}
+    G -->|YES| H["DENY: read tier2 file first"]
+    G -->|NO| I["ALLOW"]
+
+    style D fill:#5cb85c,color:#fff
+    style F fill:#d9534f,color:#fff
+    style H fill:#f0ad4e,color:#fff
+    style I fill:#5cb85c,color:#fff
 ```
 
 **Key insight:** Read is always allowed. That's how the agent loads the tier1
@@ -136,18 +137,20 @@ is complete, it stays complete for the rest of the session.
 
 ### The Prompt Gate Flow
 
-```
-User sends message
-       │
-       v
-on_prompt_submit.py reads sentinel
-       │
-       ├── Is tier1 complete?
-       │     NO  → Inject "read files first" into the agent's context
-       │     YES → Track prompt count, warn at thresholds
-       │
-       v
-The agent composes response (with injected context if startup incomplete)
+```mermaid
+graph TD
+    A["User sends message"] --> B["on_prompt_submit.py reads sentinel"]
+    B --> C{Is tier1 complete?}
+    C -->|NO| D["Inject 'read files first' into context"]
+    C -->|YES| E["Track prompt count"]
+    E --> F{Threshold reached?}
+    F -->|YES| G["Inject health warning"]
+    F -->|NO| H["Continue normally"]
+    D --> I["Agent composes response<br/>(with injected gate message)"]
+
+    style D fill:#d9534f,color:#fff
+    style G fill:#f0ad4e,color:#fff
+    style H fill:#5cb85c,color:#fff
 ```
 
 **Key insight:** Even if the agent somehow bypasses the Tool Gate, the Prompt

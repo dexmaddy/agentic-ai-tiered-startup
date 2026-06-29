@@ -18,30 +18,26 @@ key design decisions that make it work.
 AI coding agents provides hooks — shell commands that run automatically at
 specific moments in a session. This architecture uses four of them:
 
-```
-┌─ SESSION LIFECYCLE ──────────────────────────────────────────────┐
-│                                                                   │
-│  ① SessionStart          Runs ONCE when session begins            │
-│     │                    → Generate files, run checks             │
-│     │                    → Write manifest + sentinel              │
-│     v                                                             │
-│  ② UserPromptSubmit      Runs on EVERY user message               │
-│     │                    → Block if startup incomplete             │
-│     │                    → Track prompt count                      │
-│     v                                                             │
-│  ③ PreToolUse            Runs BEFORE every tool call               │
-│     │                    → Block tools until rules loaded          │
-│     │                    → Trigger on-demand tier2 loading         │
-│     │                    → Run drift detection (once)              │
-│     v                                                             │
-│  ④ PostToolUse           Runs AFTER Write/Edit calls               │
-│     │                    → Sync files to backups                   │
-│     │                    → Save reminders                          │
-│     v                                                             │
-│  ⑤ Stop                  Runs when session ends                    │
-│                          → Verify cleanup done                     │
-│                          → Block exit if repos dirty               │
-└───────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    A["① SessionStart<br/>Runs ONCE when session begins"] -->|generates| B["manifest.json + sentinel.json"]
+    B --> C["② UserPromptSubmit<br/>Runs on EVERY user message"]
+    C -->|startup incomplete| C1["Block: inject 'read files first'"]
+    C -->|startup complete| C2["Track prompt count + warn"]
+    C2 --> D["③ PreToolUse<br/>Runs BEFORE every tool call"]
+    D -->|tier1 incomplete| D1["Block tools until rules loaded"]
+    D -->|tier1 complete| D2["Check tier2 triggers + drift detection"]
+    D2 --> E["④ PostToolUse<br/>Runs AFTER Write/Edit calls"]
+    E --> E1["Sync files + save reminders"]
+    E1 --> F["⑤ Stop<br/>Runs when session ends"]
+    F -->|repos dirty| F1["Block exit, retry"]
+    F -->|all clean| F2["Allow exit"]
+
+    style A fill:#4a90d9,color:#fff
+    style C1 fill:#d9534f,color:#fff
+    style D1 fill:#d9534f,color:#fff
+    style F1 fill:#f0ad4e,color:#fff
+    style F2 fill:#5cb85c,color:#fff
 ```
 
 Each hook is a Python script that receives context on stdin and outputs
@@ -115,12 +111,11 @@ sessions that don't need everything.
 Rules that apply to specific tasks, loaded when the agent's tool calls
 contain matching keywords.
 
-```
-Agent runs: Bash("npm run deploy --production")
-                                      ↑
-Gate scans command text, finds "deploy"
-                                      ↓
-Gate blocks: "Read rules/deploy-rules.md before proceeding"
+```mermaid
+graph LR
+    A["Agent runs:<br/>Bash('npm run deploy --production')"] --> B{"Gate scans<br/>command text"}
+    B -->|finds 'deploy'| C["BLOCKED:<br/>Read rules/deploy-rules.md<br/>before proceeding"]
+    style C fill:#f0ad4e,color:#fff
 ```
 
 **Trigger design tips:**
@@ -171,32 +166,31 @@ where no API work happens. Importance ≠ frequency of need.
 
 ## How the Pieces Connect
 
+```mermaid
+graph TD
+    CONFIG["startup-config.yaml<br/><i>You write this</i>"] --> START["on_session_start.py"]
+    START --> MANIFEST["manifest.json<br/><i>Contract: files + gates</i>"]
+    START --> SENTINEL["sentinel.json<br/><i>State: reads + progress</i>"]
+    START --> TIER1["tier1-*.md<br/><i>Generated rule files</i>"]
+
+    MANIFEST --> GATE["gate_check.py"]
+    SENTINEL --> GATE
+    GATE -->|Read tool| G1["Track in sentinel, allow"]
+    GATE -->|Tier1 incomplete| G2["Block with reason"]
+    GATE -->|Tier2 keyword| G3["Block: read file first"]
+    GATE -->|All clear| G4["Allow"]
+
+    SENTINEL --> PROMPT["on_prompt_submit.py"]
+    PROMPT --> P1["Inject gate messages"]
+
+    G4 --> EDIT["on_edit.py<br/><i>After file writes</i>"]
+    EDIT --> STOP["on_stop.py<br/><i>Session end cleanup</i>"]
+
+    style CONFIG fill:#4a90d9,color:#fff
+    style G2 fill:#d9534f,color:#fff
+    style G3 fill:#f0ad4e,color:#fff
+    style G4 fill:#5cb85c,color:#fff
 ```
-startup-config.yaml          ← You write this (your rules, checks, triggers)
-       │
-       v
-on_session_start.py          ← Reads config, generates files, writes manifest
-       │
-       ├──→ manifest.json    ← Contract: what files exist, what gates apply
-       ├──→ sentinel.json    ← State: what the agent has read so far
-       └──→ tier1-*.md       ← Generated rule files in temp directory
-                │
-                v
-gate_check.py                ← Reads manifest + sentinel, blocks/allows tools
-                │
-                ├── Read? → Track in sentinel, allow
-                ├── Tier1 incomplete? → Block with reason
-                ├── Tier2 keyword? → Block, ask to read file
-                └── All clear? → Allow
-                │
-                v
-on_prompt_submit.py          ← Reads sentinel, injects gate messages
-                │
-                v
-on_edit.py                   ← After file writes, sync/remind
-                │
-                v
-on_stop.py                   ← At session end, verify cleanup
 ```
 
 ---

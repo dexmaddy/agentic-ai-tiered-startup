@@ -5,8 +5,17 @@ url: "https://dexmaddy.github.io"       # Change to your GitHub Pages URL if you
 
 theme: just-the-docs
 
+color_scheme: light
+
 nav_order_default: 0
 nav_enabled: true
+
+# Dark/light theme toggle
+enable_dark_mode: true
+
+# Mermaid diagram rendering
+mermaid:
+  version: "11"
 
 exclude:
   - Gemfile
@@ -16,6 +25,7 @@ exclude:
   - examples/
   - .github/
   - LICENSE
+  - setup.py
 
 defaults:
   - scope:
