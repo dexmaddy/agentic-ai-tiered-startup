@@ -338,6 +338,35 @@ of sessions:
    *told to read*. This closes the gap between "I loaded the rules" and
    "the rules are in my context."
 
+8. **More reasoning = worse faithfulness.** Giving the LLM more thinking
+   time makes summaries *less* faithful to sources (r = -0.685). Use
+   reasoning for verification, never for generation. See `rules/anti-hallucination-rules.md`.
+
+---
+
+## Anti-Hallucination Rules
+
+The `rules/` directory includes a research-backed framework of 14 cognitive
+rules for reducing hallucination in LLM-generated summaries. These are
+generic — they apply to any summarization task, not just one domain.
+
+The rules are organized into 5 phases (READ → WRITE → VERIFY PASS 1 →
+VERIFY PASS 2 → SIGN-OFF) because LLMs skip rules in the middle of flat
+lists (U-shaped attention bias). Each rule cites peer-reviewed research.
+
+To use them, include `rules/anti-hallucination-rules.md` as a Tier 1 file
+in your config:
+
+```yaml
+tiers:
+  tier1:
+    - name: ah-rules
+      source: rules/anti-hallucination-rules.md
+      description: "Anti-hallucination rules for faithful summaries"
+```
+
+Or reference them directly in your LLM prompts when generating summaries.
+
 ---
 
 ## File Structure
@@ -352,7 +381,11 @@ claude-tiered-startup/
 │   ├── gate_check.py                  # PreToolUse: enforce tier loading
 │   ├── on_prompt_submit.py            # UserPromptSubmit: startup gate + health warnings
 │   ├── on_stop.py                     # Stop: shutdown checks with retry
+│   ├── on_edit.py                     # PostToolUse: post-write actions (sync, reminders)
+│   ├── cross_check.py                 # Drift detection: expected vs actual state
 │   └── validators.py                  # Output-based check validators
+├── rules/
+│   └── anti-hallucination-rules.md    # 14 research-backed anti-hallucination rules
 ├── examples/
 │   ├── level-1-minimal/settings.json  # Just SessionStart
 │   ├── level-2-gated/settings.json    # + PreToolUse + UserPromptSubmit

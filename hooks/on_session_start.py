@@ -14,7 +14,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    print("ERROR: PyYAML not installed. Run: pip install pyyaml", file=sys.stderr)
+    sys.exit(1)
 
 from validators import get_validator, validate_exit_code
 
