@@ -48,7 +48,7 @@ stop:
 ## Step 2: Create Your First Rules File (5 minutes)
 
 Create `rules/core-rules.md` with your top 5 project rules.
-(See the [Bootstrapping Guide](../docs/bootstrapping-guide.md) for templates.)
+(See the [Bootstrapping Guide](../reference/bootstrapping-guide.md) for templates.)
 
 Minimum viable example:
 

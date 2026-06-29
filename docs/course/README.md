@@ -34,7 +34,7 @@ By the end of this course, you will:
 
 **Total time: ~2.5 hours**
 
-**Visual companion:** Download the [slide deck (PDF)](../slides/Structural_AI_Agent_Enforcement.pdf)
+**Visual companion:** Download the [slide deck (PDF)](../../slides/Structural_AI_Agent_Enforcement.pdf)
 to follow along
 with diagrams for each level.
 

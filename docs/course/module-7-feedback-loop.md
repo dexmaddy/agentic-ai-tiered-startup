@@ -59,7 +59,7 @@ Jest in the "migrating from" section, which Claude picked up as current.
 
 ## Step 2: Write the Rule
 
-Use the template from the [Rule Evolution document](../docs/rule-evolution-template.md):
+Use the template from the [Rule Evolution document](../reference/rule-evolution-template.md):
 
 ```markdown
 ### test-framework

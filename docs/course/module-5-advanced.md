@@ -290,7 +290,7 @@ Two implementation methods:
 - **JSON file** — simple, zero dependencies, good for under ~20 tasks
 - **SQLite** — queryable, handles concurrency, tracks history
 
-See the full **[Session Continuity Guide](../docs/session-continuity.md)**
+See the full **[Session Continuity Guide](../reference/session-continuity.md)**
 for setup instructions, code examples for both methods, and stop hook
 integration for automatic session handoff.
 

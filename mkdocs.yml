@@ -41,7 +41,7 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.highlight:
@@ -60,10 +60,10 @@ plugins:
   - search
 
 nav:
-  - Home: README.md
+  - Home: index.md
   - Getting Started:
-    - Setup Wizard: docs/setup-wizard.md
-    - Bootstrapping Guide: docs/bootstrapping-guide.md
+    - Setup Wizard: reference/setup-wizard.md
+    - Bootstrapping Guide: reference/bootstrapping-guide.md
   - Course:
     - Overview: course/README.md
     - "Module 1: The Problem": course/module-1-the-problem.md
@@ -76,6 +76,6 @@ nav:
     - "Module 8: Capstone": course/module-8-capstone.md
   - Reference:
     - Anti-Hallucination Rules: rules/anti-hallucination-rules.md
-    - Rule Evolution: docs/rule-evolution-template.md
-    - Session Continuity: docs/session-continuity.md
+    - Rule Evolution: reference/rule-evolution-template.md
+    - Session Continuity: reference/session-continuity.md
   - Slides: slides.md
