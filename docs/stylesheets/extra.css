@@ -71,9 +71,13 @@
    CONTENT AREA
    ============================================ */
 
-/* Better content width */
+/* Wider content area — use 90% of screen */
+.md-grid {
+  max-width: 95rem;
+}
+
 .md-content {
-  max-width: 52rem;
+  max-width: none;
 }
 
 /* Mermaid diagram container */
