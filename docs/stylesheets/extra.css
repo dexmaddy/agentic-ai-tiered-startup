@@ -1,4 +1,22 @@
 /* ============================================
+   THEME COLORS — dark header to complement cyan logo
+   ============================================ */
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #1a1a2e;
+  --md-primary-fg-color--light: #2d2d44;
+  --md-primary-fg-color--dark: #0f0f1a;
+  --md-accent-fg-color: #00e5ff;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #0f0f1a;
+  --md-primary-fg-color--light: #1a1a2e;
+  --md-primary-fg-color--dark: #050510;
+  --md-accent-fg-color: #00e5ff;
+}
+
+/* ============================================
    SIDEBAR NAVIGATION
    ============================================ */
 
