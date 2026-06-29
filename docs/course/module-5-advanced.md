@@ -46,7 +46,11 @@ tier1 completes — once per session:
 1. **Pass 1:** Run each command, compare output to expected value
 2. **Auto-heal** safe items (if configured with `auto_heal: true`)
 3. **Pass 2:** Re-check healed items to confirm the fix worked
-4. **Stop** — no more passes (bounded, prevents infinite loops)
+4. **Write-back suggestions:** For persistent drift, generate
+   `write_back_suggestions` proposing manifest updates or flagging
+   items for investigation (structurally enforces the
+   [Self-Healing Loop](../reference/self-healing-loop.md) pattern)
+5. **Stop** — no more passes (bounded, prevents infinite loops)
 
 Results are logged to the sentinel and reported:
 
@@ -102,8 +106,11 @@ Add to `.agent/settings.json`:
 ]
 ```
 
-The default on_edit.py provides periodic save reminders (every 15 edits).
-Customize it to add file sync or other post-write actions.
+The default on_edit.py provides periodic save reminders (every 15 edits)
+and structurally enforces the [Rule Zero](../reference/rule-zero.md)
+pattern: it scans edited files for keyword overlap with consolidated
+files and warns if content appears scattered. Customize it to add file
+sync or other post-write actions.
 
 ---
 
@@ -113,7 +120,10 @@ Customize it to add file sync or other post-write actions.
 
 Block session exit until cleanup is done. The stop hook returns exit
 code 2 (retry) when checks fail, giving Claude a chance to fix the
-issue. After max retries, it exits cleanly.
+issue. After max retries, it exits cleanly. The stop hook also
+structurally enforces [Self-Verification](../reference/self-verification.md):
+if infrastructure files were edited after the last infrastructure check,
+exit is blocked until re-verification runs.
 
 ### Setup
 

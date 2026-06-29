@@ -38,18 +38,21 @@ of sessions:
    reasoning for verification, never for generation. See the
    [Anti-Hallucination Rules](../rules/anti-hallucination-rules.md).
 
-9. **Route, don't scatter.** Every file edit should trigger "is this
-   scattered information?" and route it to the right consolidated file.
-   Without this ([Rule Zero](../reference/rule-zero.md)), information
-   accumulates in conversations and is lost at session end.
+9. **Route, don't scatter (structurally enforced).** The `on_edit.py` hook
+   scans every edited file for keyword overlap with consolidated files and
+   warns if content is scattered. Without this
+   ([Rule Zero](../reference/rule-zero.md)), information accumulates in
+   conversations and is lost at session end.
 
-10. **Verify, don't narrate.** "I updated the file" is not verification.
-    Re-run the command that proves it worked. The
+10. **Verify, don't narrate (structurally enforced).** The `on_stop.py` hook
+    blocks session exit if infrastructure files were edited after the last
+    verification check. The
     [4-point self-check](../reference/self-verification.md) catches what
     task completion misses.
 
-11. **Make the loop bidirectional.** Rules should feed audit checks AND
-    audit checks should feed rules. A one-directional system decays. The
+11. **Make the loop bidirectional (structurally enforced).** The
+    `cross_check.py` hook generates `write_back_suggestions` for persistent
+    drift, proposing manifest updates or investigation. The
     [Self-Healing Loop](../reference/self-healing-loop.md) keeps both
     sides growing from each other.
 

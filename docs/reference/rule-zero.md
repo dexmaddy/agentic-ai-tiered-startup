@@ -25,7 +25,11 @@ Every time any file is created or edited, immediately ask:
 
 ```mermaid
 graph TD
-    A["File created or edited"] --> B{"Is this scattered<br/>information?"}
+    A["File created or edited"] --> K["on_edit.py hook fires"]
+    K --> L{"Keyword overlap with<br/>consolidated files?"}
+    L -->|YES| M["⚠ Warning: content<br/>may be scattered"]
+    L -->|NO| B
+    M --> B{"Is this scattered<br/>information?"}
     B -->|NO| C["Continue"]
     B -->|YES| D{"Which file does<br/>it belong to?"}
     D --> E["Add to that file"]
@@ -33,6 +37,9 @@ graph TD
     F -->|YES| G["Add check to config"]
     F -->|NO| H["Done"]
 
+    style K fill:#9b59b6,color:#fff
+    style L fill:#9b59b6,color:#fff
+    style M fill:#d9534f,color:#fff
     style B fill:#f0ad4e,color:#fff
     style E fill:#4a90d9,color:#fff
     style G fill:#5cb85c,color:#fff
@@ -144,12 +151,22 @@ meta-rule that makes the rule system self-maintaining. Without it, rules
 accumulate in conversations and are lost. With it, every session makes
 the system stronger.
 
+**Structural enforcement:** Rule Zero is not just a behavioral pattern —
+it is structurally enforced via the `on_edit.py` PostToolUse hook. After
+every file write or edit, the hook scans the edited file for keyword
+overlap with consolidated files. If it detects content that likely belongs
+in a consolidated file, it emits a warning, prompting the agent to route
+the information before moving on. This means scattered content is caught
+at edit time, not during periodic reviews.
+
 The system grows organically:
 1. You work normally
-2. Rule Zero catches information as it appears
-3. Routes it to the right file
-4. The forward flow adds audit checks if needed
-5. Next session, the information is loaded and enforced
+2. `on_edit.py` fires on every file edit, scanning for scattered content
+3. Rule Zero catches information as it appears
+4. Routes it to the right file
+5. The forward flow adds audit checks if needed
+6. Next session, the information is loaded and enforced
 
 No periodic "cleanup" sessions needed. No "let's organize our rules" meetings.
-The system maintains itself through the routing mechanism.
+The system maintains itself through the routing mechanism, backed by
+hook enforcement that makes the pattern hard to skip.

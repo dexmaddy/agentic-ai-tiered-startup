@@ -113,6 +113,25 @@ def main() -> None:
     }
     Path(SENTINEL).write_text(json.dumps(sentinel, indent=2))
 
+    # Write-back suggestions: for persistent drift, suggest concrete fixes
+    suggestions = []
+    for d in results["drifted"]:
+        name = d["name"]
+        check = expected.get(name, {})
+        if check.get("heal_command"):
+            suggestions.append(
+                f"SUGGESTED FIX for '{name}': update expected value in manifest "
+                f"({d['expected']} -> {d['actual']}), or fix the source."
+            )
+        else:
+            suggestions.append(
+                f"UNRESOLVED DRIFT '{name}': expected {d['expected']}, got {d['actual']}. "
+                "Update manifest or investigate."
+            )
+    if suggestions:
+        sentinel["write_back_suggestions"] = suggestions
+        Path(SENTINEL).write_text(json.dumps(sentinel, indent=2))
+
     # Report
     total = sum(len(v) for v in results.values())
     print(f"Cross-check: {len(results['passed'])}/{total} passed", end="")
@@ -125,6 +144,8 @@ def main() -> None:
     if results["errors"]:
         print(f", {len(results['errors'])} errors", end="")
     print()
+    for s in suggestions:
+        print(s)
 
 
 if __name__ == "__main__":

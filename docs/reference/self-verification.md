@@ -31,9 +31,15 @@ graph LR
     A["Task completed"] --> B{"Re-run the<br/>verification command"}
     B -->|same result| C["PASS"]
     B -->|different result| D["Something was missed"]
+    D --> E["Fix applied"]
+    E --> F["on_stop.py checks:<br/>infra files edited<br/>after last infra check?"]
+    F -->|YES| G["❌ Blocks exit until<br/>re-verification runs"]
+    F -->|NO| H["Exit allowed"]
 
     style C fill:#5cb85c,color:#fff
     style D fill:#d9534f,color:#fff
+    style F fill:#9b59b6,color:#fff
+    style G fill:#d9534f,color:#fff
 ```
 
 **Wrong:**
@@ -115,14 +121,20 @@ checks:
     optional: true
 ```
 
-### As a Stop Hook Check
+### As a Stop Hook Check (Structurally Enforced)
 
-Before session exit, verify the work is complete:
+Self-verification is structurally enforced by the `on_stop.py` hook.
+Before session exit, the hook checks whether any infrastructure files
+were edited after the last infrastructure check ran. If fixes were
+applied but verification was not re-run, the hook blocks exit (exit
+code 2 — retry) until the agent re-runs verification. This prevents
+the "I fixed it but didn't check if the fix worked" failure mode.
 
 ```yaml
 stop:
   require_clean_repos: true     # Self-check #2: is it committed?
   require_transcript: false
+  require_reverify: true        # Block exit if infra files changed post-check
 ```
 
 ### As an Agent Instruction

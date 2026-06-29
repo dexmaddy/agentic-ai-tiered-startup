@@ -17,7 +17,12 @@ Most rule systems are write-once:
 
 ## The Pattern
 
-The self-healing loop connects three components:
+The self-healing loop connects three components. Drift detection is
+structurally enforced via `cross_check.py`: when persistent drift is
+found, the script generates `write_back_suggestions` that propose
+concrete fixes (manifest updates, config corrections, or items flagged
+for investigation). This moves the pattern beyond detection-only — the
+system now suggests how to resolve the drift.
 
 ```mermaid
 graph TD
@@ -26,10 +31,13 @@ graph TD
     C["Session Learnings<br/>(what went wrong)"] -->|"Route to rules"| A
     A -->|"New rule implies check?"| B
     B -->|"Check reveals gap?"| A
+    B -->|"Persistent drift detected"| W["cross_check.py generates<br/>write_back_suggestions"]
+    W -->|"Suggest manifest update<br/>or investigation"| A
 
     style A fill:#4a90d9,color:#fff
     style B fill:#5cb85c,color:#fff
     style C fill:#f0ad4e,color:#fff
+    style W fill:#9b59b6,color:#fff
 ```
 
 ### Forward Flow: Rule → Audit Check

@@ -80,6 +80,22 @@ def main() -> None:
 
     failures = []
 
+    # Self-Verification: if infrastructure files were edited after the last check, require re-run
+    if stop_config.get("require_self_verification", True):
+        check_file = os.path.join(TMPDIR, f"last-infra-check-{SESSION_ID}")
+        fix_file = os.path.join(TMPDIR, f"last-infra-fix-{SESSION_ID}")
+        try:
+            last_check_time = Path(check_file).stat().st_mtime if Path(check_file).exists() else 0
+            last_fix_time = Path(fix_file).stat().st_mtime if Path(fix_file).exists() else 0
+            if last_fix_time > last_check_time and last_fix_time > 0:
+                fix_detail = Path(fix_file).read_text().strip() if Path(fix_file).exists() else "unknown"
+                failures.append(
+                    f"Self-Verification: '{fix_detail}' was edited after last infra check. "
+                    "Re-run verification before stopping."
+                )
+        except Exception:
+            pass
+
     if stop_config.get("require_clean_repos"):
         passed, detail = check_clean_repos()
         if not passed:

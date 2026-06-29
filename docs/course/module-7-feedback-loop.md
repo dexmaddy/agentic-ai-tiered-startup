@@ -195,22 +195,29 @@ from imagining what might happen.
 
 ---
 
-## Advanced Patterns
+## Advanced Patterns (Structurally Enforced)
 
-These three patterns make the feedback loop self-sustaining. Read them
-after completing the basics above:
+These three patterns make the feedback loop self-sustaining. All three
+are now structurally enforced via hooks — not just behavioral guidelines.
+Read them after completing the basics above:
 
 1. **[Rule Zero](../reference/rule-zero.md)** — every file edit triggers
    "is this scattered information?" and routes it to the right file.
-   This is how the system grows without periodic cleanup sessions.
+   Structurally enforced: the `on_edit.py` PostToolUse hook scans
+   edited files for keyword overlap with consolidated files and warns
+   if content appears scattered.
 
 2. **[Self-Healing Loop](../reference/self-healing-loop.md)** — the
    bidirectional flow where rules feed audit checks AND audit checks
-   feed rules. Makes the system self-maintaining.
+   feed rules. Structurally enforced: `cross_check.py` now generates
+   `write_back_suggestions` for persistent drift, proposing manifest
+   updates or flagging items for investigation.
 
 3. **[Self-Verification](../reference/self-verification.md)** — the
    4-point check that proves work is actually done, not just narrated
-   as done. Apply after every task.
+   as done. Structurally enforced: `on_stop.py` blocks session exit if
+   infrastructure files were edited after the last infrastructure check,
+   requiring re-verification before the session can end.
 
 ---
 
@@ -220,8 +227,8 @@ after completing the basics above:
 - [ ] You've added at least one infrastructure check
 - [ ] You understand when to escalate a rule to a hook gate
 - [ ] You know when to retire a rule
-- [ ] You've read Rule Zero and understand the routing pattern
-- [ ] You've read the Self-Verification 4-point check
+- [ ] You've read Rule Zero and understand the routing pattern (enforced by `on_edit.py`)
+- [ ] You've read the Self-Verification 4-point check (enforced by `on_stop.py`)
 
 ---
 

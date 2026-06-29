@@ -396,7 +396,13 @@ def _generate_yaml_config(level: int, project: dict) -> dict:
     }
 
     if level >= 4:
-        config["stop"] = {"require_clean_repos": True, "max_retries": 8}
+        config["stop"] = {"require_clean_repos": True, "require_self_verification": True, "max_retries": 8}
+        config["rule_zero"] = {
+            "consolidated_files": {
+                "MEMORY.md": ["memory", "pointer", "reference", "project state"],
+                "*.md": ["feedback", "project", "reference", "architecture"],
+            }
+        }
 
     if project["include_backlog"]:
         config["tiers"]["tier1"].append({
