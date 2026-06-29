@@ -1,7 +1,7 @@
 title: Tiered Startup Architecture
 description: A hook-based system for reliable AI agent sessions
-baseurl: "/agentic-ai-tiered-startup"
-url: "https://dexmaddy.github.io"
+baseurl: "/agentic-ai-tiered-startup"    # Change to your repo name if you fork
+url: "https://dexmaddy.github.io"       # Change to your GitHub Pages URL if you fork
 
 theme: just-the-docs
 

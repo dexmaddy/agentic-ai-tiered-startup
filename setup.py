@@ -476,8 +476,33 @@ Do NOT skip startup. Do NOT explain what startup does — just do it.
 def main() -> None:
     # Non-interactive mode
     if "--non-interactive" in sys.argv:
-        print("Non-interactive mode not yet implemented. Use interactive wizard.")
-        sys.exit(1)
+        args = sys.argv[1:]
+        def get_arg(name: str, default: str) -> str:
+            for i, a in enumerate(args):
+                if a == f"--{name}" and i + 1 < len(args):
+                    return args[i + 1]
+            return default
+
+        platform_map = {"claude": 1, "cursor": 2, "windsurf": 3, "aider": 4, "custom": 5}
+        store_map = {"yaml": 1, "sqlite": 2, "postgres": 3, "postgresql": 3}
+
+        platform_key = get_arg("platform", "claude").lower()
+        store_key = get_arg("store", "yaml").lower()
+        level = int(get_arg("level", "2"))
+        project_dir = get_arg("dir", os.getcwd())
+
+        platform = PLATFORMS[platform_map.get(platform_key, 5)]
+        store = STORES[store_map.get(store_key, 1)]
+        project = {
+            "name": os.path.basename(project_dir),
+            "dir": project_dir,
+            "include_ah_rules": "--no-ah-rules" not in args,
+            "include_backlog": "--no-backlog" not in args,
+        }
+
+        print(f"Non-interactive: {platform['name']}, {store['name']}, Level {level}")
+        generate(platform, store, level, project)
+        sys.exit(0)
 
     banner()
 

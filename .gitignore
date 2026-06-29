@@ -1,4 +1,9 @@
 ._*
+.!*
 .DS_Store
 __pycache__/
 *.pyc
+*.db
+backlog.json
+Gemfile.lock
+startup-config.yaml
