@@ -1,7 +1,7 @@
 title: Tiered Startup Architecture
 description: A hook-based system for reliable Claude Code sessions
 baseurl: "/claude-tiered-startup"
-url: "https://***.gitlab.io"
+url: "https://gitlab.io"
 
 theme: just-the-docs
 
