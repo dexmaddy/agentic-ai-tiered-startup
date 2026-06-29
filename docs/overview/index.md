@@ -58,4 +58,12 @@ design decisions behind it.
     doing, exit codes lie, gate don't nag, more reasoning = worse faithfulness,
     and more.
 
+-   :material-presentation:{ .lg .middle } **[Slide Deck](../slides.md)**
+
+    ---
+
+    10-slide visual companion covering the problem, 4-hook engine, tiering
+    strategy, and all 4 levels. Use alongside these pages or share with
+    your team.
+
 </div>
