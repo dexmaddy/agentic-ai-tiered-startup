@@ -153,6 +153,32 @@ def main() -> None:
         except Exception:
             pass
 
+    # DB mode: no-truncation enforcement — block exit if DB stores lack length verification
+    if db_path and not db_path.startswith("postgresql"):
+        try:
+            import sqlite3 as _sql
+            _db = _sql.connect(db_path, timeout=5)
+            _db.row_factory = _sql.Row
+            unverified = _db.execute(
+                "SELECT details FROM rule_log "
+                "WHERE event_type='db_store' AND session_id=? "
+                "AND id NOT IN ("
+                "  SELECT CAST(details AS INTEGER) FROM rule_log "
+                "  WHERE event_type='db_store_verified' AND session_id=?"
+                ")",
+                (SESSION_ID, SESSION_ID),
+            ).fetchall()
+            _db.close()
+            if unverified:
+                names = [r["details"].split("|")[0] for r in unverified[:5]]
+                failures.append(
+                    f"No-Truncation: {len(unverified)} DB store(s) not length-verified: "
+                    + ", ".join(names) + ". "
+                    "Verify with SELECT length(column), then log event_type='db_store_verified'."
+                )
+        except Exception:
+            pass
+
     # Audit checks: run full audit if configured
     if stop_config.get("require_audit_pass"):
         try:
