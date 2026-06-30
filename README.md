@@ -26,7 +26,7 @@ This architecture solves all three with **tiered loading** (load what's needed),
 
 ## Architecture Overview
 
-Four hook points work together:
+Five hook points work together:
 
 ```mermaid
 graph TD
@@ -40,6 +40,11 @@ graph TD
     F -->|tier1 complete| I{Tier 2 keyword?}
     I -->|yes| J[BLOCK: read tier2 file first]
     I -->|no| K[ALLOW tool]
+
+    K --> O{PostToolUse}
+    O --> O1[Rule Zero enforcement]
+    O --> O2[Edit tracking]
+    O --> O3[Save reminders]
 
     L{Stop} -->|repos dirty| M[Exit 2 = retry]
     L -->|all clean| N[Exit 0 = allow]
@@ -388,7 +393,7 @@ Or reference them directly in your LLM prompts when generating summaries.
 
 Download the visual companion slides to understand the architecture at a glance:
 
-- **[PDF](slides/Structural_AI_Agent_Enforcement.pdf)** — 10 slides covering the problem, 4-hook engine, tiering strategy, and all 4 levels
+- **[PDF](slides/Structural_AI_Agent_Enforcement.pdf)** — 10 slides covering the problem, 5-hook engine, tiering strategy, and all 4 levels
 
 Use these alongside the course or as a standalone overview for your team.
 

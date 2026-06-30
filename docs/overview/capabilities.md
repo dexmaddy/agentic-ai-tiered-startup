@@ -38,7 +38,7 @@ A complete map of capabilities — what fires, when, and what it prevents.
 | **No-Truncation** | Verifies DB stores weren't silently truncated | `on_stop.py` | 4 |
 | **Audit Runner** | On-demand infrastructure checks, same validators as startup | `audit.py` | 4 |
 | **Sensitive Data Scan** | Pre-commit hook + consistency checker block personal data | `pre-commit` + `consistency_check.py` | 4 |
-| **Anti-Hallucination Rules** | 59 rules in 5 phases for faithful LLM outputs | `rules/` + DB | Any |
+| **Anti-Hallucination Rules** | 14 research-backed rules in 5 phases for faithful LLM outputs | `rules/` | Any |
 | **Feedback Loop** | Failure → Learning → Rule → Check → Hook evolution | Pattern | Any |
 
 ---
@@ -53,7 +53,7 @@ A complete map of capabilities — what fires, when, and what it prevents.
 | Rule Zero | Information scatters across files and conversations, lost at session end | Every edit is categorized and routed — nothing gets lost |
 | Self-Verification | Agent says "done" but the fix wasn't tested | Exit blocked until verification re-runs — "done" means verified |
 | Drift Detection | Config says 3 rules but you have 5 — silent mismatch grows | Expected vs actual compared every session — drift caught early |
-| Anti-Hallucination | LLM adds plausible but unsourced details to summaries | 59 rules enforce source-faithful extraction — retract if no quote |
+| Anti-Hallucination | LLM adds plausible but unsourced details to summaries | 14 rules enforce source-faithful extraction — retract if no quote |
 | Feedback Loop | Same mistakes repeat across sessions | Each failure becomes a rule, each rule becomes a check — system learns |
 | Session Continuity | User re-explains context every session | Agent picks up where last session left off — backlog persists |
 | Sensitive Data Scan | Personal data accidentally committed to public repos | Pre-commit hook + scanner block matches before they reach git |

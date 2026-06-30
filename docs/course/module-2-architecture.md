@@ -116,7 +116,7 @@ graph LR
 - Only scan the first ~120 characters of tool input
 - Only scan specific fields (command, file_path, prompt) — not the full JSON
 
-## Six Design Decisions
+## Seven Design Decisions
 
 These decisions emerged from real failures. Understanding them prevents
 you from repeating them.
@@ -149,7 +149,7 @@ parses stdout instead of trusting `$?`.
 Drift detection runs a maximum of 2 passes: detect → fix safe items → re-check → stop.
 Without a bound, auto-fix cycles can spiral when fixes create new drift.
 
-### Cross-Check: Verifying What Was Loaded
+### 6. Cross-Check: Verifying What Was Loaded
 
 After all tier1 files are read, `cross_check.py` runs exactly once. It
 compares the expected state (counts, file presence) defined in the manifest
@@ -158,7 +158,7 @@ updating a stale count). Persistent drift that cannot be safely auto-fixed
 is recorded as `write_back_suggestions` in the sentinel for the agent to
 address. The sentinel's `cross_check_done` flag prevents repeated runs.
 
-### 6. Tier by Frequency, Not Importance
+### 7. Tier by Frequency, Not Importance
 
 Critical API security rules that only matter during API work belong in tier2
 with an "api" trigger. Putting them in tier1 wastes tokens in 80% of sessions

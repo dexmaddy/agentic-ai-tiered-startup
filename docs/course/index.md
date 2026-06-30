@@ -93,8 +93,6 @@ A structured, self-paced course for building reliable AI agent sessions.
 
     **Time:** 30 minutes
 
-    **Time:** 30 minutes
-
 </div>
 
 ---
