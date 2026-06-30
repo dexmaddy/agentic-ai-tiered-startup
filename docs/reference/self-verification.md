@@ -34,12 +34,16 @@ graph LR
     D --> E["Fix applied"]
     E --> F["on_stop.py checks:<br/>infra files edited<br/>after last infra check?"]
     F -->|YES| G["❌ Blocks exit until<br/>re-verification runs"]
-    F -->|NO| H["Exit allowed"]
+    F -->|NO| H{"DB stores<br/>length-verified?"}
+    H -->|NO| I["❌ Blocks exit until<br/>truncation check runs"]
+    H -->|YES| J["Exit allowed"]
 
     style C fill:#5cb85c,color:#fff
     style D fill:#d9534f,color:#fff
     style F fill:#9b59b6,color:#fff
     style G fill:#d9534f,color:#fff
+    style H fill:#9b59b6,color:#fff
+    style I fill:#d9534f,color:#fff
 ```
 
 **Wrong:**
@@ -139,7 +143,7 @@ version control is never blocked by the gate.
 stop:
   require_clean_repos: true     # Self-check #2: is it committed?
   require_transcript: false
-  require_reverify: true        # Block exit if infra files changed post-check
+  require_self_verification: true  # Block exit if infra files changed post-check
 ```
 
 ### As an Agent Instruction
@@ -159,6 +163,24 @@ The 4-point self-check:
 3. "Did I miss anything related?" → grep for ripple effects
 4. "Would a re-run produce the same result?" → run it again
 ```
+
+### As a No-Truncation Enforcement (DB Mode)
+
+When using the database data store, `on_stop.py` verifies that every
+batch insert logged during the session has a corresponding length
+verification entry. The hook queries `rule_log` for rows with
+`event_type='db_store'` that lack a matching `event_type='db_store_verified'`
+row. If unverified stores are found, exit is blocked until the agent
+confirms the stored content matches the expected length (e.g., via
+`SELECT length(column)`). This prevents silent truncation during batch
+inserts — a failure mode where rules or checks appear to load but are
+quietly clipped, leaving the agent running with incomplete data.
+
+This is the 4th structural enforcement mechanism, alongside:
+1. Infrastructure check (startup-time)
+2. Stop hook re-verification (post-fix)
+3. Agent instructions (behavioral)
+4. No-truncation enforcement (DB integrity at exit)
 
 ## Key Insight
 

@@ -183,6 +183,47 @@ git commit -m "Add tiered startup with core rules and infrastructure checks"
 
 ---
 
+## Complete Architecture: All 5 Hooks
+
+This is the full execution flow of the Level 4 architecture. Every hook
+point and its responsibilities are shown here for reference (see also
+[Module 5](module-5-advanced.md) for detailed explanations of each stage).
+
+```
+Session start → SessionStart hook (on_session_start.py)
+  → Checks infrastructure (validators parse stdout, not exit codes)
+  → Generates tier1 + tier2 files from config
+  → Writes manifest.json + sentinel.json
+       │
+Every user message → UserPromptSubmit hook (on_prompt_submit.py)
+  → Detects /clear (context reset) — re-runs startup if triggered
+  → Blocks until tier1 complete
+  → Surfaces infra FAILs on first prompt
+  → Warns at prompt thresholds (40, 60, 80)
+       │
+Every tool call → PreToolUse hook (gate_check.py)
+  → Always allows Read (tracks file reads in sentinel)
+  → Auto-allows git commit/push (version control never blocked)
+  → Blocks non-Read tools until tier1 complete
+  → Runs cross_check.py once after tier1 completes
+  → Triggers tier2 loading on keyword matches
+  → DB mode: stale fact gate (Gate 4)
+       │
+Every Write/Edit → PostToolUse hook (on_post_tool_use.py)
+  → Save reminders
+  → Rule Zero enforcement (scattered content detection)
+  → File sync (if configured)
+       │
+Session end → Stop hook (on_stop.py)
+  → Blocks until repos clean
+  → Runs audit checks (if require_audit_pass)
+  → Self-verification enforcement
+  → DB mode: session summary + no-truncation checks
+  → Retries up to N times, then allows exit
+```
+
+---
+
 ## Verification Checklist
 
 Run through each item and confirm:
@@ -218,6 +259,18 @@ Run through each item and confirm:
 - [ ] Core rules cover your top 5-10 project conventions
 - [ ] Anti-hallucination rules are in tier1 or tier2
 - [ ] At least one rule was born from a real failure
+
+### PostToolUse (Level 4)
+- [ ] `on_post_tool_use.py` wired in settings.json for PostToolUse events
+- [ ] Save reminders fire after Write/Edit operations
+- [ ] Rule Zero scattered-content detection active (if configured)
+- [ ] File sync working (if configured)
+
+### Consistency Checker (Level 4)
+- [ ] `cross_check.py` runs once after tier1 completes
+- [ ] Auto-heals safe discrepancies (e.g., stale counts)
+- [ ] Generates `write_back_suggestions` for persistent drift
+- [ ] Sentinel shows `cross_check_done: true` after run
 
 ### Self-Verification ([enforced via on_stop hook](../reference/self-verification.md))
 - [ ] Re-run startup — does the output match your expectations?
@@ -269,13 +322,15 @@ Your system is now live. Here's how to maintain it:
 
 ## Congratulations
 
-You've built a self-improving agent session management system that:
+You've built a self-improving agent session management system with 5 hooks
+(SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop) that:
 
 1. **Loads the right context** — tier1 always, tier2 on demand
 2. **Enforces loading** — gates prevent work before rules are read
-3. **Detects drift** — cross-check catches stale references
-4. **Prevents hallucination** — 14 research-backed rules
-5. **Improves itself** — failures become rules, rules become checks
+3. **Guards output quality** — PostToolUse enforces Rule Zero on every write
+4. **Detects drift** — cross-check catches stale references
+5. **Prevents hallucination** — 14 research-backed rules
+6. **Improves itself** — failures become rules, rules become checks
 
 The system started with 5 rules. It will grow organically as you use it.
 Every failure makes it stronger. Every rule makes the next session more

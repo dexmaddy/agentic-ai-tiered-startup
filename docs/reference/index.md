@@ -81,4 +81,11 @@ your tiered startup system.
     YAML-to-SQLite translation for every construct in the course: config,
     rules, checks, tier2 triggers, backlog, and cross-check.
 
+-   :material-rocket-launch:{ .lg .middle } **[Bootstrapping Guide](bootstrapping-guide.md)**
+
+    ---
+
+    Your first 5 rules in ~15 minutes. Walks through identifying repeated
+    mistakes and turning them into tier1 rules that make the hooks useful.
+
 </div>

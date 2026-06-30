@@ -1,15 +1,15 @@
 # Module 2: Architecture Concepts
 
 **Time:** 15 minutes
-**Goal:** Understand the 4-hook system, how the pieces interact, and the
+**Goal:** Understand the 5-hook system, how the pieces interact, and the
 key design decisions that make it work.
 
 ---
 
-## The Four Hook Points
+## The Five Hook Points
 
-AI coding agents provides hooks — shell commands that run automatically at
-specific moments in a session. This architecture uses four of them:
+AI coding agents provide hooks — shell commands that run automatically at
+specific moments in a session. This architecture uses five of them:
 
 ```mermaid
 graph TD
@@ -149,6 +149,15 @@ parses stdout instead of trusting `$?`.
 Drift detection runs a maximum of 2 passes: detect → fix safe items → re-check → stop.
 Without a bound, auto-fix cycles can spiral when fixes create new drift.
 
+### Cross-Check: Verifying What Was Loaded
+
+After all tier1 files are read, `cross_check.py` runs exactly once. It
+compares the expected state (counts, file presence) defined in the manifest
+against actual state on disk. Safe discrepancies are auto-healed (e.g.,
+updating a stale count). Persistent drift that cannot be safely auto-fixed
+is recorded as `write_back_suggestions` in the sentinel for the agent to
+address. The sentinel's `cross_check_done` flag prevents repeated runs.
+
 ### 6. Tier by Frequency, Not Importance
 
 Critical API security rules that only matter during API work belong in tier2
@@ -166,24 +175,27 @@ graph TD
     START --> SENTINEL["sentinel.json<br/><i>State: reads + progress</i>"]
     START --> TIER1["tier1-*.md<br/><i>Generated rule files</i>"]
 
-    MANIFEST --> GATE["gate_check.py"]
+    MANIFEST --> GATE["gate_check.py<br/><i>PreToolUse hook</i>"]
     SENTINEL --> GATE
     GATE -->|Read tool| G1["Track in sentinel, allow"]
     GATE -->|Tier1 incomplete| G2["Block with reason"]
     GATE -->|Tier2 keyword| G3["Block: read file first"]
     GATE -->|All clear| G4["Allow"]
+    GATE -->|Tier1 just completed| CC["cross_check.py<br/><i>Runs once</i>"]
+    CC --> CC1["Compare expected vs actual"]
+    CC1 --> CC2["Auto-heal safe items,<br/>write_back_suggestions for rest"]
 
-    SENTINEL --> PROMPT["on_prompt_submit.py"]
+    SENTINEL --> PROMPT["on_prompt_submit.py<br/><i>UserPromptSubmit hook</i>"]
     PROMPT --> P1["Inject gate messages"]
 
-    G4 --> EDIT["on_edit.py<br/><i>After file writes</i>"]
-    EDIT --> STOP["on_stop.py<br/><i>Session end cleanup</i>"]
+    G4 --> EDIT["on_post_tool_use.py<br/><i>PostToolUse hook</i>"]
+    EDIT --> STOP["on_stop.py<br/><i>Stop hook</i>"]
 
     style CONFIG fill:#4a90d9,color:#fff
     style G2 fill:#d9534f,color:#fff
     style G3 fill:#f0ad4e,color:#fff
     style G4 fill:#5cb85c,color:#fff
-```
+    style CC fill:#5bc0de,color:#fff
 ```
 
 ---

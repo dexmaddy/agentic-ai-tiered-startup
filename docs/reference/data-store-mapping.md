@@ -223,6 +223,45 @@ data store. Only the **source** of rules, checks, and config changes.
 
 ---
 
+## Session Summaries (`session_summaries` table — DB mode only)
+
+The `session_summaries` table tracks what happened in each session and
+enables continuity across sessions. It is created by `--init-db` and
+queried by both the startup hook (to show "Continue From Last Session")
+and the stop hook (to enforce `require_session_summary`).
+
+=== "SQLite"
+
+    ```sql
+    CREATE TABLE IF NOT EXISTS session_summaries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        topic TEXT,
+        completed_items TEXT,       -- JSON array of strings
+        next_items TEXT,            -- JSON array of strings
+        session_date DATE DEFAULT CURRENT_DATE,
+        duration_minutes INTEGER,
+        prompt_count INTEGER
+    );
+
+    -- Insert a session summary
+    INSERT INTO session_summaries (topic, completed_items, next_items)
+    VALUES (
+      'Added auth middleware',
+      '["Implemented JWT validation", "Added rate limiting"]',
+      '["Write auth tests", "Update API docs"]'
+    );
+
+    -- Query last session for continuity
+    SELECT topic, completed_items, next_items
+    FROM session_summaries ORDER BY id DESC LIMIT 1;
+    ```
+
+This table has no YAML equivalent — session handoff in YAML mode uses a
+JSON file (see [Session Continuity](session-continuity.md) for both
+approaches).
+
+---
+
 ## Hook Script Differences
 
 | Aspect | YAML | SQLite |
@@ -235,9 +274,51 @@ data store. Only the **source** of rules, checks, and config changes.
 | Rule grouping | One file per source | Auto-grouped by `category` column |
 | Truncation guard | N/A (files are read whole) | Stop hook verifies stored length matches source |
 
+### Hook Script Naming
+
+The repository contains two startup hook scripts:
+
+- **`on_session_start.py`** — The YAML variant. Reads config from
+  `startup-config.yaml` and rules from Markdown files on disk.
+- **`on_session_start_db.py`** — The database variant. Reads config from
+  the `config` table and rules from the `rules` table. Supports both
+  SQLite and PostgreSQL via auto-detection of the connection string.
+
+When the setup wizard runs with SQLite or PostgreSQL, it copies
+`on_session_start_db.py` into your project's hooks directory and
+**renames it to `on_session_start.py`** so that `settings.json` always
+points to the same script name regardless of data store. If you set up
+hooks manually without the wizard, use the `_db` variant directly and
+rename it yourself, or update your `settings.json` command to reference
+`on_session_start_db.py`.
+
 Everything downstream of the SessionStart hook (manifest, sentinel, gates,
 tier2 triggers, cross-check, stop hook) works identically regardless of
 data store. The only difference is where the data comes from.
+
+---
+
+## PostgreSQL Limitations
+
+!!! warning "PostgreSQL is experimental"
+
+PostgreSQL support is present in the database variant hook script
+(`on_session_start_db.py`) and uses auto-detection: if `AGENT_DB_PATH`
+starts with `postgresql://` or `postgres://`, the script connects via
+`psycopg2` instead of `sqlite3`. Schema creation and basic rule/config
+reads work, but **several hook features silently skip PostgreSQL**:
+
+| Feature | Hook | Behavior with PostgreSQL |
+|---------|------|--------------------------|
+| Session summary enforcement | `on_stop.py` | Skipped — no exit gate check |
+| No-truncation verification | `on_stop.py` | Skipped — no length verification on exit |
+| Edit logging to `rule_log` | `on_edit.py` | Skipped — edits are not recorded |
+| Fact-reference staleness check | `gate_check.py` | Skipped — no stale-fact warnings |
+
+These features use `sqlite3` directly (Python stdlib) and guard against
+PostgreSQL with `not db_path.startswith("postgresql")`. The setup wizard
+marks PostgreSQL as experimental and notes it is not yet tested in
+production. If you need these features, use SQLite.
 
 ---
 

@@ -65,7 +65,7 @@ Claude Code's hooks API, but the patterns adapt to any platform with lifecycle e
 | **Backlog** | `backlog.json` | `backlog` table |
 | **Session handoff** | JSON file | `session_summaries` table |
 | **Config** | `startup-config.yaml` | `config` table |
-| **Dependencies** | PyYAML | None (sqlite3 is Python stdlib) |
+| **Dependencies** | PyYAML | None (sqlite3 is Python stdlib). PostgreSQL requires `psycopg2-binary`. |
 | **Best for** | Under ~50 rules, single user | 50+ rules, cross-referencing, concurrent sessions |
 | **Setup** | Copy config, write markdown files | `python3 hooks/on_session_start_db.py --init-db project.db` |
 
@@ -77,6 +77,7 @@ that activate automatically when `AGENT_DB_PATH` is set:
 | Table | Feature | Hook |
 |-------|---------|------|
 | `rule_log` | Edit logging — every Write/Edit operation is recorded | `on_edit.py` |
+| `session_summaries` | Tracks session date, topic, completed/next items | `on_stop.py` |
 | `system_facts` | Stores project facts referenced by rules | `gate_check.py` |
 | `fact_references` | Maps rule-to-fact dependencies for staleness detection | `gate_check.py` |
 

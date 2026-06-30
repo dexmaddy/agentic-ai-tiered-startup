@@ -263,18 +263,31 @@ Session N+1 starts:
 | `date` | When the session happened | "2026-06-29" |
 | `prompt_count` | How many prompts (context health) | 45 |
 
-### Stop Hook Integration
+### Stop Hook Integration (DB Mode)
 
-Wire session handoff into the stop hook so it happens automatically:
+Wire session handoff into the stop hook so it happens automatically.
+The config key is `require_session_summary` (applies when `AGENT_DB_PATH`
+is set):
 
 ```yaml
 stop:
   require_clean_repos: true
-  require_session_handoff: true   # Add this
+  require_session_summary: true   # DB mode: block exit until summary saved
 ```
 
-The stop hook checks if `last_session` was updated. If not, it blocks
-exit (exit code 2) and tells the agent to save session state first.
+The stop hook queries the `session_summaries` table for a row with today's
+date. If none exists, it blocks exit (exit code 2) and tells the agent
+to save session state first, printing a ready-to-run SQL command:
+
+```
+sqlite3 $AGENT_DB_PATH "INSERT INTO session_summaries \
+  (topic, completed_items, next_items) VALUES \
+  ('<topic>', '[\"item1\"]', '[\"item1\"]')"
+```
+
+> **Note:** For the JSON file method (Method A), session handoff is not
+> enforced by the stop hook — it relies on agent instructions to update
+> `last_session` before ending. Only the DB mode has structural enforcement.
 
 ---
 

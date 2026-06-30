@@ -18,11 +18,12 @@ Most rule systems are write-once:
 ## The Pattern
 
 The self-healing loop connects three components. Drift detection is
-structurally enforced via `cross_check.py`: when persistent drift is
-found, the script generates `write_back_suggestions` that propose
-concrete fixes (manifest updates, config corrections, or items flagged
-for investigation). This moves the pattern beyond detection-only — the
-system now suggests how to resolve the drift.
+structurally enforced via `cross_check.py`, which is the actual
+enforcement mechanism: it runs a bounded 2-pass cycle (detect, fix,
+re-check, log remaining), compares expected state from the manifest
+against live checks, and generates concrete `write_back_suggestions`
+for any persistent drift. This moves the pattern beyond detection-only
+— the system actively proposes how to resolve drift.
 
 ```mermaid
 graph TD
@@ -141,6 +142,52 @@ Apply the self-healing check:
 - After any file edit → "Is this scattered information that belongs in a consolidated file?"
 
 The last question is RULE ZERO — see the [Rule Zero](rule-zero.md) pattern.
+
+---
+
+## The Enforcement Mechanism: `cross_check.py`
+
+`cross_check.py` is the engine that makes the self-healing loop
+operational. It runs once per session after Tier 1 loads and implements
+a **bounded 2-pass design**:
+
+1. **Pass 1 — Detect and auto-heal.** Compare every expected value in the
+   manifest's `cross_check.expected_counts` against a live command result.
+   Items marked `auto_heal: true` with a `heal_command` are fixed
+   automatically.
+2. **Pass 2 — Re-check healed items only.** Any healed item that still
+   drifts is moved to the drifted list.
+3. **Stop.** No further passes run. The sentinel is marked
+   `cross_check_done: true` to prevent re-runs within the same session.
+
+This bounded design prevents infinite correction loops — the system
+gets exactly two chances to converge, then logs whatever remains.
+
+### Write-Back Suggestions
+
+When drift persists after both passes, `cross_check.py` (lines 116-133)
+generates structured fix suggestions and stores them in the sentinel
+file at `sentinel["write_back_suggestions"]`.
+
+Two formats are used depending on whether the check had a heal command:
+
+| Condition | Suggestion format |
+|-----------|------------------|
+| Check has a `heal_command` (auto-heal was attempted but source still drifted) | `SUGGESTED FIX for '<name>': update expected value in manifest (X -> Y), or fix the source.` |
+| Check has no `heal_command` (manual-only item) | `UNRESOLVED DRIFT '<name>': expected X, got Y. Update manifest or investigate.` |
+
+**What triggers suggestions:** Any item in the `drifted` list after
+Pass 2 completes — meaning auto-heal either wasn't configured or
+didn't resolve the mismatch.
+
+**Where stored:** `sentinel["write_back_suggestions"]` — a JSON array
+of suggestion strings written to the sentinel file in `$TMPDIR`.
+
+**What happens next:** The agent reads the sentinel on subsequent
+prompts. It can act on suggestions directly (e.g., updating the manifest
+count) or flag them for human review if the drift source is unclear.
+The suggestions are also printed to stdout during the hook run so they
+appear in the session log.
 
 ### Standalone Audit Runner
 

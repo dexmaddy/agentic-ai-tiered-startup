@@ -159,6 +159,29 @@ in a consolidated file, it emits a warning, prompting the agent to route
 the information before moving on. This means scattered content is caught
 at edit time, not during periodic reviews.
 
+**Detection thresholds:** The hook skips files under 50 bytes (too small
+to contain meaningful scattered content) and requires at least 3 keyword
+matches before emitting a warning. This avoids false positives on files
+that share only one or two generic terms with a consolidated file.
+
+**Configuring consolidated files:** The hook reads its file list and
+keywords from `startup-config.yaml` under `rule_zero.consolidated_files`:
+
+```yaml
+rule_zero:
+  consolidated_files:
+    - path: rules/core-rules.md
+      keywords: [convention, pattern, rule, standard, decision]
+    - path: MEMORY.md
+      keywords: [project, state, context, session, workflow]
+    - path: backlog.json
+      keywords: [todo, task, backlog, planned, deferred]
+```
+
+Each entry maps a file path to the keywords that signal content belongs
+there. When the hook finds >= 3 keyword matches between an edited file
+and any consolidated file entry, it warns that the content may be scattered.
+
 The system grows organically:
 1. You work normally
 2. `on_edit.py` fires on every file edit, scanning for scattered content

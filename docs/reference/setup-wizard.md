@@ -90,3 +90,21 @@ stop:
 
 `shutdown_steps` uses the same validator framework as startup checks.
 `require_session_summary` only applies when `AGENT_DB_PATH` is set.
+
+## Level 4 Consistency Checker
+
+At Level 4, the wizard also generates `tests/consistency_check.py` — a
+standalone script that validates your setup with 5 checks:
+
+| Check | What It Validates |
+|-------|-------------------|
+| Hook syntax | All hook scripts parse as valid Python (no syntax errors) |
+| Hooks in settings | Hook scripts are registered in the agent settings file |
+| Config validity | `startup-config.yaml` parses without error |
+| Rule sources exist | Files referenced in tier config exist on disk |
+| Sensitive data scan | No secrets or PII patterns in config or rule files |
+
+The sensitive data scan uses pattern matching from
+`tests/sensitive-patterns.example.txt`, which is copied into your project
+for customization. Edit it to add patterns specific to your organization
+(API key formats, internal domains, employee ID patterns, etc.).

@@ -109,13 +109,16 @@ graph TD
     A["Agent tries: Bash('npm test')"] --> B["gate_check.py reads sentinel"]
     B --> C{Is tool = Read?}
     C -->|YES| D["Track file read, ALLOW"]
-    C -->|NO| E{Is tier1 complete?}
+    C -->|NO| GIT{"Is git commit/push?"}
+    GIT -->|YES| GITA["ALLOW<br/>(version control never blocked)"]
+    GIT -->|NO| E{Is tier1 complete?}
     E -->|NO| F["DENY with missing file list"]
     E -->|YES| G{Tier2 keyword?}
     G -->|YES| H["DENY: read tier2 file first"]
     G -->|NO| I["ALLOW"]
 
     style D fill:#5cb85c,color:#fff
+    style GITA fill:#5cb85c,color:#fff
     style F fill:#d9534f,color:#fff
     style H fill:#f0ad4e,color:#fff
     style I fill:#5cb85c,color:#fff
@@ -130,11 +133,20 @@ auto-allowed even during the `tier1_pending` state. Version control should
 never be blocked — the agent needs to be able to commit fixes discovered
 during startup without waiting for all tier1 files to load.
 
+**DB mode — stale fact gate (Gate 4):** When `AGENT_DB_PATH` is set,
+`gate_check.py` adds a fourth gate that queries SQLite for facts marked
+stale or unverified. If the agent's tool call references an entity with
+stale facts, the gate injects a warning to verify before proceeding. This
+only activates in DB-backed deployments and is skipped in YAML-only setups.
+
 ### The Prompt Gate Flow
 
 ```mermaid
 graph TD
-    A["User sends message"] --> B["on_prompt_submit.py reads sentinel"]
+    A["User sends message"] --> CLR{"/clear detected?<br/>(prompt count vs transcript mismatch)"}
+    CLR -->|YES| CLR1["Delete sentinel + counters<br/>Re-run SessionStart<br/>Inject CONTEXT RESET message"]
+    CLR -->|NO| B["on_prompt_submit.py reads sentinel"]
+    CLR1 --> B
     B --> C{Is tier1 complete?}
     C -->|NO| D["Inject 'read files first' into context"]
     C -->|YES| E{Infra FAILs?<br/>first prompt only}
@@ -146,6 +158,7 @@ graph TD
     D --> J["Agent composes response<br/>(with injected gate message)"]
     E1 --> F
 
+    style CLR1 fill:#d9534f,color:#fff
     style D fill:#d9534f,color:#fff
     style E1 fill:#d9534f,color:#fff
     style H fill:#f0ad4e,color:#fff
@@ -224,6 +237,12 @@ if tool_name == "Read":
 
 Once all tier1 names appear in `completed_reads`, the sentinel stage
 flips to `"complete"` and tools are unblocked.
+
+> **Implementation note:** The actual `mark_file_read()` function checks
+> both tier1 and tier2 entries (not just tier1), prevents duplicate entries
+> in `completed_reads`, and persists the sentinel immediately via
+> `write_json()` after each read. The simplified snippet above shows the
+> matching logic only.
 
 ---
 

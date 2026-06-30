@@ -173,6 +173,27 @@ if expected != actual:
 
 The cross-check runs once per session (tracked by `cross_check_done` in sentinel).
 
+When drift persists across sessions, the cross-check generates
+`write_back_suggestions` — stored in the sentinel file under that key. Each
+suggestion is a structured object proposing a specific manifest update:
+
+```json
+{
+  "write_back_suggestions": [
+    {
+      "field": "expected_counts.rules",
+      "current_value": 72,
+      "suggested_value": 78,
+      "reason": "rules count on disk (78) has differed from manifest (72) for 3 sessions"
+    }
+  ]
+}
+```
+
+These suggestions are advisory — they are not auto-applied. The agent or user
+reviews them and updates the config if appropriate. This keeps the manifest
+accurate without requiring manual audits.
+
 ---
 
 ## Level 4: Full Architecture
@@ -183,18 +204,78 @@ Block session exit until cleanup is done:
 
 ```bash
 cp hooks/on_stop.py .agent/hooks/
+cp hooks/on_edit.py .agent/hooks/
+cp hooks/audit.py .agent/hooks/
 ```
 
 ```yaml
 stop:
   require_clean_repos: true
   require_transcript: false
+  require_self_verification: true   # blocks exit if infra files edited after last check
+  require_audit_pass: true          # runs audit checks before allowing exit
+  require_session_summary: true     # requires session summary saved to DB
   max_retries: 8
 ```
 
 The stop hook returns exit code 2 (retry) when checks fail. the agent sees the
 failure message and can fix the issue (e.g., commit uncommitted files). After
 max retries, it exits cleanly to avoid trapping the user.
+
+**`require_self_verification`** — if any infrastructure file (config, manifest,
+hook scripts) was edited during the session, the stop hook blocks exit until the
+agent re-runs validation. This prevents sessions from closing with broken infra.
+
+**`require_audit_pass`** — invokes `audit.py` before exit. The audit runner
+validates project invariants (rule counts, file integrity, config consistency).
+If any check fails, exit is blocked with actionable error messages.
+
+**`require_session_summary`** — ensures a session summary is saved to the DB
+before exit, preserving continuity across sessions.
+
+### PostToolUse Hook
+
+The PostToolUse hook (`on_edit.py`) fires after every tool use and provides
+three capabilities:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "python3 .agent/hooks/on_edit.py",
+        "timeout": 10000
+      }]
+    }]
+  }
+}
+```
+
+1. **Edit tracking** — logs every file edit to the `rule_log` table with
+   timestamp, file path, and tool used. Creates an audit trail for the session.
+
+2. **Save reminders** — when the agent has made significant changes without
+   saving, the hook emits a reminder to persist work.
+
+3. **Rule Zero enforcement** — scans edited files for scattered content (rules,
+   facts, or decisions written inline instead of in the canonical store). When
+   detected, warns the agent to consolidate into the proper location.
+
+### No-Truncation Enforcement
+
+At Level 4, the system verifies that DB stores match source length. When content
+is written to the database, the stored text is compared against the original
+source to detect truncation. This catches cases where large files are silently
+cut short during ingestion.
+
+### Consistency Checker
+
+The setup wizard generates a project-specific consistency checker at Level 4.
+This checker validates cross-references between config, manifest, and hook
+scripts — catching mismatches like a config referencing a hook file that doesn't
+exist, or a manifest listing a source file that has moved.
 
 ### Output-Based Validators
 
