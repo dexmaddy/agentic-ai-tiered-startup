@@ -24,7 +24,7 @@ By the end of this course, you will:
 | Module | Title | Time | What You'll Build |
 |--------|-------|------|-------------------|
 | 1 | [The Problem](module-1-the-problem.md) | 10 min | Problem diagnosis for your own project |
-| 2 | [Architecture Concepts](module-2-architecture.md) | 15 min | Mental model of the 4-hook system |
+| 2 | [Architecture Concepts](module-2-architecture.md) | 15 min | Mental model of the 5-hook system |
 | 3 | [Your First Startup Hook](module-3-first-hook.md) | 20 min | Working Level 1: manifest + tier1 files |
 | 4 | [Adding Gates](module-4-gates.md) | 20 min | Level 2: structural enforcement |
 | 5 | [On-Demand Loading & Drift Detection](module-5-advanced.md) | 20 min | Level 3-4: tier2 triggers, cross-check, stop hook |

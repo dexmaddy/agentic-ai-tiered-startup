@@ -209,7 +209,7 @@ Every tool call → PreToolUse hook (gate_check.py)
   → Triggers tier2 loading on keyword matches
   → DB mode: stale fact gate (Gate 4)
        │
-Every Write/Edit → PostToolUse hook (on_post_tool_use.py)
+Every Write/Edit → PostToolUse hook (on_edit.py)
   → Save reminders
   → Rule Zero enforcement (scattered content detection)
   → File sync (if configured)
@@ -261,7 +261,7 @@ Run through each item and confirm:
 - [ ] At least one rule was born from a real failure
 
 ### PostToolUse (Level 4)
-- [ ] `on_post_tool_use.py` wired in settings.json for PostToolUse events
+- [ ] `on_edit.py` wired in settings.json for PostToolUse events
 - [ ] Save reminders fire after Write/Edit operations
 - [ ] Rule Zero scattered-content detection active (if configured)
 - [ ] File sync working (if configured)

@@ -22,7 +22,7 @@ A structured, self-paced course for building reliable AI agent sessions.
 
     ---
 
-    The 4-hook engine, manifest/sentinel state management, and 6 key
+    The 5-hook engine, manifest/sentinel state management, and 6 key
     design decisions. Build the mental model before writing code.
 
     **Time:** 15 minutes

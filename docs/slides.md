@@ -8,7 +8,7 @@ Download the visual companion slides to understand the architecture at a glance.
 
 - The problem (context waste, rule drift, startup chaos)
 - Documentation vs enforcement paradigm shift
-- The 4-hook architecture engine
+- The 5-hook architecture engine
 - State management (manifest + sentinel)
 - Tiering strategy (frequency > importance)
 - Levels 1-4 progressive implementation

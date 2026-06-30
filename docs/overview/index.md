@@ -33,7 +33,7 @@ design decisions behind it.
 
     ---
 
-    The 4-hook engine (SessionStart, PreToolUse, UserPromptSubmit, Stop),
+    The 5-hook engine (SessionStart, PreToolUse, UserPromptSubmit, PostToolUse, Stop),
     manifest/sentinel state management, and how tiers work together.
 
 </div>
@@ -75,7 +75,7 @@ design decisions behind it.
 
     ---
 
-    10-slide visual companion covering the problem, 4-hook engine, tiering
+    10-slide visual companion covering the problem, 5-hook engine, tiering
     strategy, and all 4 levels. Use alongside these pages or share with
     your team.
 

@@ -188,7 +188,7 @@ graph TD
     SENTINEL --> PROMPT["on_prompt_submit.py<br/><i>UserPromptSubmit hook</i>"]
     PROMPT --> P1["Inject gate messages"]
 
-    G4 --> EDIT["on_post_tool_use.py<br/><i>PostToolUse hook</i>"]
+    G4 --> EDIT["on_edit.py<br/><i>PostToolUse hook</i>"]
     EDIT --> STOP["on_stop.py<br/><i>Stop hook</i>"]
 
     style CONFIG fill:#4a90d9,color:#fff
