@@ -1,8 +1,8 @@
 # AI Agent Harness
 
-A progressive, hook-based system that ensures AI agent sessions start with
-the right context loaded, enforced structurally — not by hoping the agent reads
-your instructions carefully.
+A hook-based framework that makes AI coding agent sessions reliable —
+from startup through work to shutdown. Structural enforcement via gates
+that block, not suggestions that nag.
 
 ---
 
@@ -10,12 +10,12 @@ your instructions carefully.
 
 <div class="grid cards" markdown>
 
--   :material-shield-check:{ .lg .middle } **Consistent startup, every session**
+-   :material-shield-check:{ .lg .middle } **Reliable sessions, start to finish**
 
     ---
 
-    Structural gates block all tools until critical context is loaded —
-    verified by file-read tracking, not trust.
+    Structural gates enforce rule loading at startup, route scattered
+    information during work, and verify completion at shutdown.
 
 -   :material-lightning-bolt:{ .lg .middle } **50%+ token savings**
 
@@ -24,19 +24,19 @@ your instructions carefully.
     Tiered loading — essential rules always, specialized rules on-demand
     when trigger keywords appear.
 
--   :material-sync:{ .lg .middle } **Zero stale references**
+-   :material-sync:{ .lg .middle } **Self-healing drift detection**
 
     ---
 
-    Drift detection catches when your instructions say "58 rules" but
-    the source has 62. Self-healing corrects what it can.
+    Expected vs actual state compared every session. Safe drift auto-healed,
+    persistent drift generates fix suggestions.
 
--   :material-alert-circle-check:{ .lg .middle } **Infrastructure problems caught immediately**
+-   :material-check-decagram:{ .lg .middle } **Verified completion, not narrated**
 
     ---
 
-    Failed checks surface as ACTION REQUIRED messages the agent must fix
-    before responding.
+    Stop hook blocks exit until repos are clean, fixes are re-checked,
+    and session state is saved. "Done" means verified.
 
 </div>
 

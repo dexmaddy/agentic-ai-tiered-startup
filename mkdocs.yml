@@ -1,5 +1,5 @@
 site_name: AI Agent Harness
-site_description: A hook-based system for reliable AI agent sessions
+site_description: Hook-based framework for reliable AI agent sessions — startup gates, drift detection, Rule Zero, self-verification, anti-hallucination rules, and session continuity
 site_url: https://dexmaddy.github.io/ai-agent-harness/
 
 theme:

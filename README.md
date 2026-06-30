@@ -1,28 +1,39 @@
 # AI Agent Harness
 
-A progressive, hook-based system that ensures AI agent sessions start with
-the right context loaded, enforced structurally — not by hoping the agent reads
-your project instructions carefully.
+A hook-based framework that makes AI coding agent sessions reliable —
+from startup through work to shutdown. Structural enforcement via gates
+that block, not suggestions that nag.
 
 ## The Problem
 
-Without managed startup, AI agent sessions suffer from three issues:
+Without a harness, AI agent sessions suffer from six issues:
 
 1. **Context waste** — loading everything every session burns tokens on rules
-   that aren't needed for the current task. A 3000-line rule set costs ~4K
-   tokens on every session, even when you're just fixing a typo.
+   that aren't needed for the current task.
 
-2. **Rule drift** — facts, counts, and references go stale. Your project instructions
-   says "58 rules" but the DB has 62. No one notices until a rule is missed.
+2. **Rule drift** — facts, counts, and references go stale silently.
+   No one notices until a rule is missed.
 
-3. **Startup chaos** — CLAUDE.md says "read these files" but there's no
-   enforcement. the agent skips files, partially loads context, or starts working
-   before critical rules are loaded. Writing "you must read X" in a markdown
-   file is documentation, not enforcement.
+3. **Startup chaos** — instructions say "read these files" but there's no
+   enforcement. The agent skips files or starts working before rules are loaded.
 
-This architecture solves all three with **tiered loading** (load what's needed),
-**structural gates** (block tools until context is loaded), and **drift detection**
-(catch stale references automatically).
+4. **Information scattering** — learnings and decisions accumulate in
+   conversations and random files. When the session ends, they're lost.
+
+5. **Session amnesia** — every new session starts from zero. The agent doesn't
+   know what was done last time or what's next.
+
+6. **Unverified completion** — the agent says "done" but the fix wasn't tested,
+   the commit wasn't pushed, or the config wasn't validated.
+
+The AI Agent Harness solves all six:
+
+- **Tiered loading** — load what's needed, defer the rest (1, 2)
+- **Structural gates** — block tools until context is loaded (3)
+- **Drift detection** — catch stale references, auto-heal safe items (2)
+- **Rule Zero** — route scattered information to consolidated files at edit time (4)
+- **Session continuity** — persistent backlog and session handoff (5)
+- **Self-verification** — block exit until work is verified, not just narrated (6)
 
 ## Architecture Overview
 
