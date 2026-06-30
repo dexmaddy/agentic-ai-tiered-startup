@@ -67,7 +67,7 @@ design decisions behind it.
 
     ---
 
-    Eight hard-won insights from building this system: documenting is not
+    Eleven hard-won insights from building this system: documenting is not
     doing, exit codes lie, gate don't nag, more reasoning = worse faithfulness,
     and more.
 
